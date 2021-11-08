@@ -1,0 +1,71 @@
+#pragma once
+#include "ofMain.h"
+#include "./block.h"
+
+// 特定の型の遷移を管理する
+// 数値・Bool・色・Vec3
+// paramはブロックを持つ
+// ブロックは基本的に全てFloatで、ここで情報を解釈して上に渡す
+
+enum paramType {
+    PTYPE_FLOAT,
+    PTYPE_BOOL,
+    PTYPE_COLOR,
+    PTYPE_VEC2,
+    PTYPE_VEC3,
+    PTYPE_EVENT,
+};
+
+class param {
+public:
+
+    void setType(paramType tp);
+    paramType const & getType(){return myType;}
+
+    template <typename T> T get(uint64_t const & time, uint64_t const & duration){}
+
+    float   getFloat(uint64_t const & time, uint64_t const & duration);
+    ofFloatColor getColor(uint64_t const & time, uint64_t const & duration);
+    string getEvent(uint64_t const & time, uint64_t const & duration);
+    ofVec2f getVec2f(uint64_t const & time, uint64_t const & duration);
+    ofVec3f getVec3f(uint64_t const & time, uint64_t const & duration);
+    float   getBlockValue(int numBlock, uint64_t const & time, uint64_t const & duration);
+    
+    vector<ofPtr<block> > pickBlocks(int number);
+
+    void addKeyPoint(uint64_t const & time);
+    int  moveKeyPoint(ofPtr<block> const & bl, int const & targetTime, vector<uint64_t> const & snapPt, int snapRange);
+    void setKeyPoint(ofPtr<block> const & bl, int const & targetTime);
+    void removeKeyPoint(ofPtr<block> const & bl);
+
+    vector<uint64_t> const & getKeyPoints(){return keyPoints;}
+    vector<ofPtr<block> > const & getBlocks(int num){return blocks[num];}
+
+    string dumpBlocks();
+    void        refleshInherit();//継承関係を更新する
+
+    void resetMaxMinRange();
+    float getValueMax(int index = -1);
+    float getValueMin(int index = -1);
+
+    ofJson getJsonData();
+
+    protected:
+  
+    //プロパティ（編集される固定値）
+    paramType   myType = PTYPE_FLOAT;
+    vector<uint64_t>        keyPoints;
+    vector<ofPtr<block> >   blocks[4];
+
+    //計算される値達
+    bool        checkParamMatching(paramType tp);
+    int         numUsingBlockLine = 1;
+    uint64_t    lastSeekPoint = 0;
+    float valueMax[4], valueMin[4];
+};
+
+template <> inline float param::get(uint64_t const & time, uint64_t const & duration){return getFloat(time, duration);}
+template <> inline ofFloatColor param::get(uint64_t const & time, uint64_t const & duration){return getColor(time, duration);}
+template <> inline string param::get(uint64_t const & time, uint64_t const & duration){return getEvent(time, duration);}
+template <> inline ofVec2f param::get(uint64_t const & time, uint64_t const & duration){return getVec2f(time, duration);}
+template <> inline ofVec3f param::get(uint64_t const & time, uint64_t const & duration){return getVec3f(time, duration);}
