@@ -1,8 +1,8 @@
-
-#ifdef TARGET_OSX || TARGET_WIN32
-
 #pragma once
+#include "ofConstants.h"
 #include "ofMain.h"
+
+#if defined(TARGET_WIN32)
 #include "timeline.h"
 #include "imGuiSheepUtil.h"
 
@@ -72,7 +72,6 @@ protected:
     void drawParam_event(ofPtr<param> pr, ofRectangle area, uint64_t begin, uint64_t end);
     void drawPeek(ofRectangle area);
     void drawBrush(ofRectangle area);
-
     void drawParameterGui(ofPtr<block> & b, ofPtr<param> & p);
     void removeTrack(ofPtr<trackBase> const & tr);
 
@@ -189,5 +188,4 @@ protected:
         return wide_to_utf8_winapi(ws);
     }
 };
-
 #endif

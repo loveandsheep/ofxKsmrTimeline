@@ -1,6 +1,6 @@
-﻿#ifdef TARGET_OSX || TARGET_WIN32
+﻿#include "timelineViewer.h"
 
-#include "timelineViewer.h"
+#if defined(TARGET_WIN32)
 
 void timelineViewer::setup(ofPtr<timeline> tmPtr) {
     tm = tmPtr;
@@ -902,5 +902,4 @@ void timelineViewer::removeTrack(ofPtr<trackBase> const & tr)
 
     tm->removeTrack(tr->getName());
 }
-
 #endif
