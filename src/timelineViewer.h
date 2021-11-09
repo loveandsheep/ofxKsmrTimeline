@@ -50,6 +50,7 @@ public:
     void zoomOut(){view_begin = 0;view_end = tm->getDuration();}
 
     bool isGuiHovered = false;
+    bool isEditorHovered = false;
 protected:
 
     float seekLeft = 180;

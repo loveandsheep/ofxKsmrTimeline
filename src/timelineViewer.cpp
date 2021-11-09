@@ -33,7 +33,8 @@ void timelineViewer::draw(ofRectangle area) {
 
     ofSetHexColor(0x768491);
     ofDrawRectangle(area);
-
+    isEditorHovered = area.inside(ofGetMouseX(), ofGetMouseY());
+    
     //Brush描画など
     seekLeft = area.x + 180;
     seekWidth = MAX(100, area.getWidth() - 180);
