@@ -53,15 +53,16 @@ public:
         }
         return false;
     }
-    template <typename T> T getParameter(string trackName, int paramIndex = 0)
+    template <typename T> T getParameter(string trackName, int paramIndex = 0, int time = -1)
     {
+        if (time < 0) time = passed;
         T ret = T();
         bool exist = false;
         for (auto & t : tracks)
         {
             if (t->getName() == trackName) 
             {
-                ret = t->getParamsRef()[paramIndex]->get<T>(passed, duration);
+                ret = t->getParamsRef()[paramIndex]->get<T>(time, duration);
                 exist = true;
             }
         }
@@ -69,10 +70,11 @@ public:
         return ret;
     }
 
-    template<typename T> T getParameter(ofPtr<trackBase> & tr, int paramIndex = 0)
+    template<typename T> T getParameter(ofPtr<trackBase> & tr, int paramIndex = 0, int time = -1)
     {
+        if (time < 0) time = passed;
         T ret = T();
-        ret = tr->getParamsRef()[paramIndex]->get<T>(passed, duration);
+        ret = tr->getParamsRef()[paramIndex]->get<T>(time, duration);
         return ret;
     }
 
