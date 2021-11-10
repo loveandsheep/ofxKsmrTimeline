@@ -1,6 +1,7 @@
 #pragma once
 #include "ofMain.h"
 #include "./param.h"
+#include "./jsonParam.h"
 
 enum trackType {
     TRACK_FLOAT,
@@ -13,6 +14,7 @@ enum trackType {
     TRACK_MOTOR,
     TRACK_EVENT,
     TRACK_INHERITANCE,
+    TRACK_JSONSTREAM,
 };
 
 // トラックは複数のparamを持つ

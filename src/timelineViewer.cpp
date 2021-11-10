@@ -1,5 +1,6 @@
 ﻿#include "timelineViewer.h"
 
+#define TARGET_WIN32
 #if defined(TARGET_WIN32)
 
 void timelineViewer::setup(ofPtr<timeline> tmPtr) {
@@ -193,6 +194,27 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
     ImGui::SameLine();
     if (ImGui::Button("Down")) tm->downTrack(tr);
     
+    if (tr->getType() == TRACK_JSONSTREAM)
+    {
+        jsonParam* jtr = (jsonParam*)tr->getParam(0).get();
+        ImGui::SameLine();
+        if (ImGui::Button("Load"))
+        {
+            ofFileDialogResult result = ofSystemLoadDialog("load", false, "./bin/data");        
+            if (result.bSuccess)
+            {
+                jtr->load(result.getPath());
+            }
+        }
+        if (jtr->keyNames.size() > 0)
+        {
+            if (combo("Key", &jtr->keyIndex, jtr->keyNames))
+            {
+                jtr->calcParameters(jtr->keyNames[jtr->keyIndex]);
+            }
+        }
+    }
+
     strcpy(gui_trackInput, tr->getName().substr(0, numEventText).c_str());
     if (ImGui::InputText("Name", gui_trackInput, numTrackText))
     {
@@ -216,6 +238,7 @@ float timelineViewer::drawParam(ofPtr<param> pr, ofRectangle area, uint64_t begi
     ofTranslate(area.getPosition());
 
     if (pr->getType() == PTYPE_FLOAT) drawParam_float(pr, area, begin, end);
+    if (pr->getType() == PTYPE_JSONSTREAM) drawParam_json(pr, area, begin, end);
     if (pr->getType() == PTYPE_COLOR) drawParam_color(pr, area, begin, end);
     if (pr->getType() == PTYPE_EVENT) drawParam_event(pr, area, begin, end);
     if (pr->getType() == PTYPE_VEC3) drawParam_vector(pr, area, begin, end);
@@ -337,6 +360,25 @@ void timelineViewer::drawParam_vector(ofPtr<param> pr, ofRectangle area, uint64_
             
             ofDrawLine(i, value_a, i + step, value_b);
         }
+    }
+}
+
+void timelineViewer::drawParam_json(ofPtr<param> pr, ofRectangle area, uint64_t begin, uint64_t end)
+{
+    jsonParam* jpr = (jsonParam*)pr.get();
+    int step = 5;
+    float rangeMin = jpr->getValueMin();
+    float rangeMax = jpr->getValueMax();
+    //パラメータの連続値を描画
+    for (int i = 0;i < area.width; i+=step)
+    {
+        float timed_a = ofMap(i, 0, area.width, begin, end);
+        float timed_b = ofMap(i + step, 0, area.width, begin, end);
+        float value_a = ofMap(jpr->getFloat(timed_a, tm->getDuration()), rangeMin, rangeMax, area.height, 0);
+        float value_b = ofMap(jpr->getFloat(timed_b, tm->getDuration()), rangeMin, rangeMax, area.height, 0);
+
+        ofSetColor(255, 100, 80);
+        ofDrawLine(i, value_a, i + step, value_b);
     }
 }
 
@@ -593,6 +635,8 @@ void timelineViewer::drawGui()
     if (ImGui::Button("Vec2")) createNewTrack("vec2", TRACK_VEC2);
     ImGui::SameLine();
     if (ImGui::Button("Vec3")) createNewTrack("vec3", TRACK_VEC3);
+    ImGui::SameLine();
+    if (ImGui::Button("Json")) createNewTrack("json", TRACK_JSONSTREAM);
     
     ImGui::Text(" \n=== Edit ===");
     ImGui::Checkbox("Snap", &doSnap);

@@ -9,6 +9,7 @@ void param::setType(paramType tp)
     if (tp == PTYPE_VEC3) numUsingBlockLine = 3;
     if (tp == PTYPE_COLOR) numUsingBlockLine = 4;    
     if (tp == PTYPE_EVENT) numUsingBlockLine = 1;
+    if (tp == PTYPE_JSONSTREAM) numUsingBlockLine = 1;
 }
 
 //選択されたBlockと並列したBlockを列挙する（VectorやColorで参照する）

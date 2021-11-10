@@ -40,6 +40,13 @@ void trackBase::setup(string name, trackType type, bool newTrack)
         params.push_back(np);
     }
 
+    if (type == TRACK_JSONSTREAM)
+    {
+        auto np = make_shared<jsonParam>();
+        np->setType(PTYPE_JSONSTREAM);
+        params.push_back(np);
+    }
+
     if (newTrack) for (auto & p : params) p->addKeyPoint(0);
     //TODO: タイプを増やすよ
 }

@@ -170,10 +170,18 @@ void timeline::load(string path)
         //paramsの数はtrackTypeによって保証されている前提
         auto & params = nt->getParamsRef();
         for (int i = 0;i < params.size(); i++)
-        {
+        {            
             if (i < jtr["params"].size())
             {
                 auto & j_pr = jtr["params"][i];
+
+                //特殊パラメータ型の処置
+                if (j_pr["type"].get<int>() == int(PTYPE_JSONSTREAM))
+                {
+                    jsonParam* jsonpr = (jsonParam*)params[i].get();
+                    jsonpr->parseJson(j_pr);
+                }
+
                 for (int j = 0;j < j_pr["keyPoints"].size();j++)
                 {
                     params[i]->addKeyPoint(j_pr["keyPoints"][j]);

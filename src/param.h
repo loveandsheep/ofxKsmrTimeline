@@ -14,6 +14,7 @@ enum paramType {
     PTYPE_VEC2,
     PTYPE_VEC3,
     PTYPE_EVENT,
+    PTYPE_JSONSTREAM,
 };
 
 class param {
@@ -24,7 +25,7 @@ public:
 
     template <typename T> T get(uint64_t const & time, uint64_t const & duration){}
 
-    float   getFloat(uint64_t const & time, uint64_t const & duration);
+    virtual float   getFloat(uint64_t const & time, uint64_t const & duration);
     ofFloatColor getColor(uint64_t const & time, uint64_t const & duration);
     string getEvent(uint64_t const & time, uint64_t const & duration);
     ofVec2f getVec2f(uint64_t const & time, uint64_t const & duration);
@@ -45,10 +46,10 @@ public:
     void        refleshInherit();//継承関係を更新する
 
     void resetMaxMinRange();
-    float getValueMax(int index = -1);
-    float getValueMin(int index = -1);
+    virtual float getValueMax(int index = -1);
+    virtual float getValueMin(int index = -1);
 
-    ofJson getJsonData();
+    virtual ofJson getJsonData();
 
     protected:
   

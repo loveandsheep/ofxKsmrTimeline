@@ -69,6 +69,7 @@ protected:
     float drawParam(ofPtr<param> pr, ofRectangle area, uint64_t begin, uint64_t end);
     void drawParam_vector(ofPtr<param> pr, ofRectangle area, uint64_t begin, uint64_t end);
     void drawParam_float(ofPtr<param> pr, ofRectangle area, uint64_t begin, uint64_t end);
+    void drawParam_json(ofPtr<param> pr, ofRectangle area, uint64_t begin, uint64_t end);
     void drawParam_color(ofPtr<param> pr, ofRectangle area, uint64_t begin, uint64_t end);
     void drawParam_event(ofPtr<param> pr, ofRectangle area, uint64_t begin, uint64_t end);
     void drawPeek(ofRectangle area);
@@ -188,5 +189,17 @@ protected:
         wstring ws = multi_to_wide_winapi(s);
         return wide_to_utf8_winapi(ws);
     }
+
+    bool combo(string label, int* idx, vector<string> str)
+    {
+        return ImGui::Combo(label.c_str(), idx,
+            [](void* vec, int idx, const char** out_text) {
+                std::vector<std::string>* vector = reinterpret_cast<std::vector<std::string>*>(vec);
+                if (idx < 0 || idx >= vector->size())return false;
+                *out_text = vector->at(idx).c_str();
+                return true;
+            }, reinterpret_cast<void*>(&str), str.size());
+    }
+
 };
 #endif
