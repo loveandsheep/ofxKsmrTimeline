@@ -193,6 +193,8 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
     if (ImGui::Button("Up")) tm->upTrack(tr);
     ImGui::SameLine();
     if (ImGui::Button("Down")) tm->downTrack(tr);
+    ImGui::SameLine();
+    ImGui::Checkbox("OSC", &tr->oscSend);
     
     if (tr->getType() == TRACK_JSONSTREAM)
     {
@@ -220,7 +222,27 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
     {
         tr->setName(string(gui_trackInput));
     }
-    ImGui::Checkbox("OSC", &tr->oscSend);
+
+    char val[1024] = {0};
+    if (tr->getType() == TRACK_FLOAT) 
+    {
+        sprintf(val, "[%-8.2f]", tr->getParam(0)->getFloat(tm->getPassed(), tm->getDuration()));
+    }
+
+    if (tr->getType() == TRACK_VEC2)
+    {
+        ofVec2f v = tr->getParam(0)->getVec2f(tm->getPassed(), tm->getDuration());
+        sprintf(val, "[%-8.2f, %-8.2f]", v[0], v[1]);
+    }
+
+    if (tr->getType() == TRACK_VEC3)
+    {
+        ofVec3f v = tr->getParam(0)->getVec3f(tm->getPassed(), tm->getDuration());
+        sprintf(val, "[%-8.2f, %-8.2f, %-8.2f]", v[0], v[1], v[2]);
+    }
+    
+    ImGui::Text(val);
+
     ImGui::End();
     ImGui::PopStyleColor();
     
@@ -254,7 +276,7 @@ float timelineViewer::drawParam(ofPtr<param> pr, ofRectangle area, uint64_t begi
         for (int i = int(view_begin / snpW) * snpW;i < view_end; i+=snpW) 
         {
             float drawX = ofMap(i, view_begin, view_end, 0, seekWidth);
-            ofSetColor(50);
+            ofSetColor(150);
             ofDrawLine(drawX, 0, drawX, area.height);
         }
     }
