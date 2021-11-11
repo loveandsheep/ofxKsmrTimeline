@@ -77,6 +77,8 @@ protected:
     void drawParameterGui(ofPtr<block> & b, ofPtr<param> & p);
     void removeTrack(ofPtr<trackBase> const & tr);
 
+    int getCurrentSnapRange();
+
     ofPtr<timeline> tm;
     ofPtr<trackBase> peekHeight;
     ofPtr<trackBase> hoverTrack;

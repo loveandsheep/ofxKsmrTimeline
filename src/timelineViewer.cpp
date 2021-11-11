@@ -248,6 +248,17 @@ float timelineViewer::drawParam(ofPtr<param> pr, ofRectangle area, uint64_t begi
     auto & bl = pr->getBlocks(0);
     pr->resetMaxMinRange();
 
+    if (doSnap)
+    {
+        int snpW = getCurrentSnapRange();
+        for (int i = int(view_begin / snpW) * snpW;i < view_end; i+=snpW) 
+        {
+            float drawX = ofMap(i, view_begin, view_end, 0, seekWidth);
+            ofSetColor(50);
+            ofDrawLine(drawX, 0, drawX, area.height);
+        }
+    }
+
     //ブロックの端描画とホバー判定
     for (int i = 0;i < kp.size();i++)
     {
@@ -536,6 +547,19 @@ void timelineViewer::mousePressed(ofMouseEventArgs & e)
     }
 }
 
+int timelineViewer::getCurrentSnapRange()
+{
+    int autoSnaps[] = {100, 500, 1000, 5000, 10000, 30000, 60000, 300000};//0.5秒~5分
+    int snapWidth = 0;
+    for (int i = 0;i < 8;i++)
+    {
+        float currentWidth = seekWidth / (view_end - view_begin) * autoSnaps[snapWidth];
+        if (100 < currentWidth) break;
+        snapWidth++;
+    }
+    return autoSnaps[snapWidth];
+}
+
 void timelineViewer::mouseDragged(ofMouseEventArgs & e)
 {
     ofVec2f diff = lastDragPoint - ofVec2f(e.x, e.y);
@@ -551,7 +575,8 @@ void timelineViewer::mouseDragged(ofMouseEventArgs & e)
     {
         if (snap)
         {
-            for (int i = int(view_begin / 500) * 500;i < view_end; i+=500) snapPoints.push_back(i);
+            int snpW = getCurrentSnapRange();
+            for (int i = int(view_begin / snpW) * snpW;i < view_end; i+=snpW) snapPoints.push_back(i);
 
             for (auto & tr : tm->getTracks())
                 for (auto & pr : tr->getParamsRef())
