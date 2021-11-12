@@ -24,24 +24,22 @@ vector<ofPtr<block> > param::pickBlocks(int number)
     return ret;
 }
 
-string param::getEvent(uint64_t const & time, uint64_t const & duration)
+tm_event param::getEvent(uint64_t const & time, uint64_t const & duration)
 {
+
+    tm_event ret;
     if (checkParamMatching(PTYPE_EVENT))
     {
         for (int i = 0;i < keyPoints.size();i++)
         {
-            if (time < keyPoints[i]) blocks[0][i]->setTo(0);
-            else
+            if (time > keyPoints[i])
             {
-                if (blocks[0][i]->getTo() == 0)
-                {
-                    blocks[0][i]->setTo(1);
-                    return blocks[0][i]->eventName;
-                }
+                ret.label = blocks[0][i]->eventName;
+                ret.time = keyPoints[i];
             }
         }
     }
-    return "";
+    return ret;
 }
 
 ofVec2f param::getVec2f(uint64_t const & time, uint64_t const & duration)

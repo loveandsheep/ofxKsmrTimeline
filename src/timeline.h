@@ -79,6 +79,7 @@ public:
     }
 
     string getCurrentFileName(){return currentFileName;}
+    tm_event oscEvent;
 
     void setSenderAddr(string addr);
     void setSenderPort(int port);

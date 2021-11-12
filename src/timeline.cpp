@@ -37,6 +37,7 @@ void timeline::sendOsc()
     sendOn |= sendAlways;
 
     seekOscCheck = passed;
+
     if (sendOn)
     {
         ofxOscMessage pm;
@@ -62,9 +63,20 @@ void timeline::sendOsc()
             }
             if (t == TRACK_EVENT)
             {
-                string mes = getParameter<string>(tr);
-                if (mes.length() > 0) m.addStringArg(mes);
-                else sendEnable = false;
+                // FIXME: 再生開始時、直是のイベントが発火してしまう
+                // FIXME: イベントが複数トラックになっていると処置しきれない
+                tm_event mes = getParameter<tm_event>(tr);
+
+                sendEnable = false;
+                if (oscEvent.time != mes.time)
+                {
+                    oscEvent = mes;
+                    m.addStringArg(mes.label);
+                    if (mes.label != "N/A" && !getPaused())
+                    {
+                        sendEnable = true;
+                    }
+                }
             }
             if (t == TRACK_VEC2)
             {

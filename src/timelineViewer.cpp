@@ -151,7 +151,7 @@ void timelineViewer::drawPeek(ofRectangle area)
         
         if (mouseLock == "peek")
         {
-            uint64_t targTime = ofMap(mp.x, seekLeft, seekLeft + seekWidth, view_begin, view_end);
+            uint64_t targTime = MIN(view_end, MAX(view_begin, ofMap(mp.x, seekLeft, seekLeft + seekWidth, view_begin, view_end)));
             tm->setPositionByMillis(targTime);
             seekVideo(tm->getPassed());
         }
@@ -1059,6 +1059,7 @@ void timelineViewer::stopVideo()
 
 void timelineViewer::syncFromVideo()
 {
+    if (!videoSync || !video) return;
     tm->setPositionByMillis(video->getDuration() * video->getPosition() * 1000);
 }
 

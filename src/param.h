@@ -17,6 +17,11 @@ enum paramType {
     PTYPE_JSONSTREAM,
 };
 
+struct tm_event {
+    string label = "N/A";
+    int time = -1;
+};
+
 class param {
 public:
 
@@ -27,7 +32,7 @@ public:
 
     virtual float   getFloat(uint64_t const & time, uint64_t const & duration);
     ofFloatColor getColor(uint64_t const & time, uint64_t const & duration);
-    string getEvent(uint64_t const & time, uint64_t const & duration);
+    tm_event getEvent(uint64_t const & time, uint64_t const & duration);
     ofVec2f getVec2f(uint64_t const & time, uint64_t const & duration);
     ofVec3f getVec3f(uint64_t const & time, uint64_t const & duration);
     float   getBlockValue(int numBlock, uint64_t const & time, uint64_t const & duration);
@@ -67,6 +72,6 @@ public:
 
 template <> inline float param::get(uint64_t const & time, uint64_t const & duration){return getFloat(time, duration);}
 template <> inline ofFloatColor param::get(uint64_t const & time, uint64_t const & duration){return getColor(time, duration);}
-template <> inline string param::get(uint64_t const & time, uint64_t const & duration){return getEvent(time, duration);}
+template <> inline tm_event param::get(uint64_t const & time, uint64_t const & duration){return getEvent(time, duration);}
 template <> inline ofVec2f param::get(uint64_t const & time, uint64_t const & duration){return getVec2f(time, duration);}
 template <> inline ofVec3f param::get(uint64_t const & time, uint64_t const & duration){return getVec3f(time, duration);}
