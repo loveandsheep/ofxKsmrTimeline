@@ -6,6 +6,14 @@
 #include "timeline.h"
 #include "imGuiSheepUtil.h"
 
+#define VIDEOSYNC_HAP
+#ifdef VIDEOSYNC_HAP
+    #include "ofxHapPlayer.h"
+    typedef ofxHapPlayer tm_videoPlayer;
+#else
+    typedef  ofVideoPlayer tm_videoPlayer;
+#endif
+
 namespace palette{
     static const int orange[]  = {
         0xFFA984,
@@ -51,6 +59,10 @@ public:
 
     bool isGuiHovered = false;
     bool isEditorHovered = false;
+
+    //動画周り
+    void setSyncVideo(bool enable, ofPtr<tm_videoPlayer> v = nullptr);
+
 protected:
 
     float seekLeft = 180;
@@ -78,6 +90,15 @@ protected:
     void removeTrack(ofPtr<trackBase> const & tr);
 
     int getCurrentSnapRange();
+
+    bool videoSync = false;
+    void seekVideo(uint64_t time);
+    void playVideo();
+    void pauseVideo(bool b);
+    void stopVideo();
+    void syncFromVideo();
+
+    ofPtr<tm_videoPlayer> video;
 
     ofPtr<timeline> tm;
     ofPtr<trackBase> peekHeight;

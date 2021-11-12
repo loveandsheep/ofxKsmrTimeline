@@ -18,7 +18,7 @@ void timelineViewer::setup(ofPtr<timeline> tmPtr) {
 }
 
 void timelineViewer::update() {
-    
+    syncFromVideo();
 }
 
 
@@ -153,6 +153,7 @@ void timelineViewer::drawPeek(ofRectangle area)
         {
             uint64_t targTime = ofMap(mp.x, seekLeft, seekLeft + seekWidth, view_begin, view_end);
             tm->setPositionByMillis(targTime);
+            seekVideo(tm->getPassed());
         }
     }
     else if (mouseLock == "peek") mouseLock = "free";
@@ -481,8 +482,24 @@ void timelineViewer::keyPressed(ofKeyEventArgs & key){
     //再生・停止
     if (key.key == ' ')
     {
-        if (tm->getIsPlay())    tm->togglePause();
-        else                    tm->play();
+        if (tm->getIsPlay())    
+        {
+            if (videoSync)
+            {
+                bool isPaused = video->isPaused();
+                pauseVideo(!isPaused);
+                tm->setPause(!isPaused);
+            }
+            else
+            {
+                tm->togglePause();
+            }
+        }
+        else
+        {
+            tm->play();
+            playVideo();
+        }
     }
 
     //削除
@@ -751,9 +768,17 @@ void timelineViewer::drawGui()
     }
 
     ImGui::Text(" \n=== Playing ===");
-    if (ImGui::Button("Play")) tm->play();
+    if (ImGui::Button("Play")) 
+    {
+        tm->play();
+        playVideo();
+    }
     ImGui::SameLine();
-    if (ImGui::Button("Stop")) tm->stop();
+    if (ImGui::Button("Stop"))
+    {
+        tm->stop();
+        stopVideo();
+    }
     ImGui::SameLine();
     ImGui::Checkbox("Loop", &tm->isLoop);
 
@@ -994,4 +1019,47 @@ void timelineViewer::removeTrack(ofPtr<trackBase> const & tr)
 
     tm->removeTrack(tr->getName());
 }
+
+void timelineViewer::seekVideo(uint64_t time)
+{
+    if (!videoSync || !video) return;
+    video->setPosition(time / 1000.0 / video->getDuration());
+}
+
+void timelineViewer::setSyncVideo(bool enable, ofPtr<tm_videoPlayer> v)
+{
+    video = v;
+    videoSync = enable;
+    if (video && video->isLoaded())
+    {
+        tm->setDuration(video->getDuration() * 1000);
+        zoomOut();
+    }
+}
+
+void timelineViewer::playVideo()
+{
+    if (!videoSync || !video) return;
+    video->setPosition(0);
+    video->play();
+}
+
+void timelineViewer::pauseVideo(bool b)
+{
+    if (!videoSync || !video) return;
+    video->setPaused(b);
+}
+
+void timelineViewer::stopVideo()
+{
+    if (!videoSync || !video) return;
+    video->stop();
+    video->setPosition(0.0);
+}
+
+void timelineViewer::syncFromVideo()
+{
+    tm->setPositionByMillis(video->getDuration() * video->getPosition() * 1000);
+}
+
 #endif
