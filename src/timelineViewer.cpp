@@ -18,7 +18,6 @@ void timelineViewer::setup(ofPtr<timeline> tmPtr) {
 }
 
 void timelineViewer::update() {
-    syncFromVideo();
 }
 
 
