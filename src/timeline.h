@@ -46,6 +46,8 @@ public:
     
     void drawGui();
 
+    tm_event getEventParameter(ofPtr<trackBase> & tr, int paramIndex = 0, int time = -1, int callOrigin = 0);
+
     bool getParameterExist(string trackName){
         for (auto & t : tracks)
         {
@@ -57,13 +59,11 @@ public:
     {
         if (time < 0) time = passed;
         T ret = T();
-        bool exist = false;
         for (auto & t : tracks)
         {
             if (t->getName() == trackName) 
             {
-                ret = t->getParamsRef()[paramIndex]->get<T>(time, duration);
-                exist = true;
+                return getParameter<T>(t, paramIndex, time);
             }
         }
 
@@ -107,3 +107,10 @@ protected:
     string currentPath = "";
     string currentFileName = "";
 };
+
+//イベントのgetParameterのみ特殊化
+template <> inline tm_event timeline::getParameter(ofPtr<trackBase> & tr, int paramIndex, int time)
+{
+    if (time < 0) time = passed;
+    return getEventParameter(tr, paramIndex, time);
+}

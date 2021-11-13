@@ -65,17 +65,13 @@ void timeline::sendOsc()
             {
                 // FIXME: 再生開始時、直是のイベントが発火してしまう
                 // FIXME: イベントが複数トラックになっていると処置しきれない
-                tm_event mes = getParameter<tm_event>(tr);
+                tm_event mes = getEventParameter(tr, 0, -1, 1);
 
                 sendEnable = false;
-                if (oscEvent.time != mes.time)
+                if (mes.label.length() > 0)
                 {
-                    oscEvent = mes;
                     m.addStringArg(mes.label);
-                    if (mes.label != "N/A" && !getPaused())
-                    {
-                        sendEnable = true;
-                    }
+                    sendEnable = true;
                 }
             }
             if (t == TRACK_VEC2)
@@ -292,4 +288,18 @@ void timeline::setReceiverPort(int port)
 {
     recvPort = port;
     receiver.setup(recvPort);
+}
+
+tm_event timeline::getEventParameter(ofPtr<trackBase> & tr, int paramIndex, int time, int callOrigin)
+{
+    if (time < 0) time = passed;
+    tm_event ret = tr->getParamsRef()[paramIndex]->get<tm_event>(time, duration);
+
+    if (tr->eventCallOrigin[callOrigin] != ret.time)
+    {
+        tr->eventCallOrigin[callOrigin] = ret.time;
+
+        if (ret.label != "" && !getPaused()) return ret;
+    }
+    return tm_event();
 }

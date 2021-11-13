@@ -41,6 +41,9 @@ public:
 
     ofJson getJsonData();
 
+    static const int NUM_ORIGIN = 32;
+    int eventCallOrigin[NUM_ORIGIN] = {0};
+
 protected:
     string uniqueName;//起動中に使う、変更しても終了まで変更しない名前。主にGUIのIDとして使う
     string myName;

@@ -18,7 +18,7 @@ enum paramType {
 };
 
 struct tm_event {
-    string label = "N/A";
+    string label = "";
     int time = -1;
 };
 
