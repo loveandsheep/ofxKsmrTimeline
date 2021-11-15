@@ -6,13 +6,7 @@
 #include "timeline.h"
 #include "imGuiSheepUtil.h"
 
-#define VIDEOSYNC_HAP
-#ifdef VIDEOSYNC_HAP
-    #include "ofxHapPlayer.h"
-    typedef ofxHapPlayer tm_videoPlayer;
-#else
-    typedef  ofVideoPlayer tm_videoPlayer;
-#endif
+typedef ofBaseVideoPlayer tm_videoPlayer;
 
 namespace palette{
     static const int orange[]  = {
