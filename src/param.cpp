@@ -169,6 +169,15 @@ int param::moveKeyPoint(ofPtr<block> const & bl , int const & targetTime, vector
     return ret;
 }
 
+void param::clearKeyPoints()
+{
+    for (auto & b : blocks[0])
+    {
+        removeKeyPoint(b);
+    }
+    
+}
+
 void param::removeKeyPoint(ofPtr<block> const & bl)
 {
     int removeIndex = -1;

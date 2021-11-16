@@ -31,7 +31,7 @@ public:
     trackType const & getType(){return myType;}
     ofPtr<param> getParam(string name);
     ofPtr<param> getParam(int index);
-    vector<ofPtr<param> > const & getParamsRef(){return params;}
+    vector<ofPtr<param> > & getParamsRef(){return params;}
     string getName(){return myName;}
     string getUniqueName(){return uniqueName;}
     void setName(string name){myName = name;};

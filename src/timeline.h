@@ -42,7 +42,7 @@ public:
     void upTrack(ofPtr<trackBase> tr);
     void downTrack(ofPtr<trackBase> tr);
 
-    vector<ofPtr<trackBase> > const & getTracks(){return tracks;}
+    vector<ofPtr<trackBase> > & getTracks(){return tracks;}
     
     void drawGui();
 

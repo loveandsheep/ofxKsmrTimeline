@@ -43,9 +43,10 @@ public:
     int  moveKeyPoint(ofPtr<block> const & bl, int const & targetTime, vector<uint64_t> const & snapPt, int snapRange);
     void setKeyPoint(ofPtr<block> const & bl, int const & targetTime);
     void removeKeyPoint(ofPtr<block> const & bl);
+    void clearKeyPoints();
 
     vector<uint64_t> const & getKeyPoints(){return keyPoints;}
-    vector<ofPtr<block> > const & getBlocks(int num){return blocks[num];}
+    vector<ofPtr<block> > & getBlocks(int num){return blocks[num];}
 
     string dumpBlocks();
     void        refleshInherit();//継承関係を更新する
