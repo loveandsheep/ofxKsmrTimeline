@@ -240,6 +240,11 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
         ofVec3f v = tr->getParam(0)->getVec3f(tm->getPassed(), tm->getDuration());
         sprintf(val, "[%-8.2f, %-8.2f, %-8.2f]", v[0], v[1], v[2]);
     }
+
+    if (tr->getType() == TRACK_JSONSTREAM)
+    {
+        sprintf(val, "[%-8.2f]", tr->getParam(0)->getFloat(tm->getPassed(), tm->getDuration()));
+    }
     
     ImGui::Text(val);
 

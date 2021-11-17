@@ -39,7 +39,7 @@ public:
     
     vector<ofPtr<block> > pickBlocks(int number);
 
-    void addKeyPoint(uint64_t const & time);
+    int  addKeyPoint(uint64_t const & time);
     int  moveKeyPoint(ofPtr<block> const & bl, int const & targetTime, vector<uint64_t> const & snapPt, int snapRange);
     void setKeyPoint(ofPtr<block> const & bl, int const & targetTime);
     void removeKeyPoint(ofPtr<block> const & bl);

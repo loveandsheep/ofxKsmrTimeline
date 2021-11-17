@@ -97,7 +97,7 @@ bool param::checkParamMatching(paramType tp)
     return true;
 }
 
-void param::addKeyPoint(uint64_t const & time)
+int param::addKeyPoint(uint64_t const & time)
 {
     int index = 0;
     for (int i = 0;i < keyPoints.size();i++)
@@ -120,6 +120,7 @@ void param::addKeyPoint(uint64_t const & time)
     }
 
     refleshInherit();
+    return index;
 }
 
 void param::setKeyPoint(ofPtr<block> const & bl, int const & targetTime)
@@ -171,11 +172,17 @@ int param::moveKeyPoint(ofPtr<block> const & bl , int const & targetTime, vector
 
 void param::clearKeyPoints()
 {
-    for (auto & b : blocks[0])
+    for (int i = 0;i < numUsingBlockLine;i++)
     {
-        removeKeyPoint(b);
+        while (blocks[i].size() > 0) 
+        {
+            blocks[i][0].reset();
+            blocks[i].erase(blocks[i].begin());
+        }
     }
-    
+    while (keyPoints.size() > 0) keyPoints.erase(keyPoints.begin());
+
+    refleshInherit();
 }
 
 void param::removeKeyPoint(ofPtr<block> const & bl)
