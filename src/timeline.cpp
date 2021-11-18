@@ -5,15 +5,18 @@ void timeline::setup() {
     receiver.setup(recvPort);
 }
 
-void timeline::update() {
+timelineState timeline::update() {
+    timelineState ret = STATE_IDLE;
     if (isPlay)
     {
         if (paused)
         {
+            ret = STATE_PAUSE;
             started = ofGetElapsedTimeMillis() - passed;
         }
         else
         {
+            ret = STATE_PLAYING;
             passed = ofGetElapsedTimeMillis() - started;
         }
 
@@ -22,10 +25,12 @@ void timeline::update() {
             sendOsc();
             if (getIsLoop()) play();
             else stop();
+            ret = STATE_FINISHED;
         }
     }
 
     sendOsc();
+    return ret;
 }
 
 void timeline::sendOsc()

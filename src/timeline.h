@@ -11,6 +11,13 @@ public:
     vector<ofPtr<trackBase> >   tracks;
 };
 
+enum timelineState {
+    STATE_IDLE,
+    STATE_PLAYING,
+    STATE_PAUSE,
+    STATE_FINISHED,
+};
+
 class timeline {
 public:
     void load(string path);
@@ -38,7 +45,7 @@ public:
     void sendOsc();
 
     void setup();
-    void update();
+    timelineState update();
     void draw();
 
 
