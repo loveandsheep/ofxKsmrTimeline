@@ -264,6 +264,19 @@ float timelineViewer::drawParam(ofPtr<param> pr, ofRectangle area, uint64_t begi
     ofPushMatrix();
     ofTranslate(area.getPosition());
 
+    //スナップガイドの描画
+    if (doSnap)
+    {
+        int snpW = getCurrentSnapRange();
+        for (int i = int(view_begin / snpW) * snpW;i < view_end; i+=snpW) 
+        {
+            float drawX = ofMap(i, view_begin, view_end, 0, seekWidth);
+            ofSetColor(20);
+            ofDrawLine(drawX, 0, drawX, area.height);
+        }
+    }
+
+    //各パラメータ種別に合わせた描画
     if (pr->getType() == PTYPE_FLOAT) drawParam_float(pr, area, begin, end);
     if (pr->getType() == PTYPE_JSONSTREAM) drawParam_json(pr, area, begin, end);
     if (pr->getType() == PTYPE_COLOR) drawParam_color(pr, area, begin, end);
@@ -274,17 +287,6 @@ float timelineViewer::drawParam(ofPtr<param> pr, ofRectangle area, uint64_t begi
     auto & kp = pr->getKeyPoints();
     auto & bl = pr->getBlocks(0);
     pr->resetMaxMinRange();
-
-    if (doSnap)
-    {
-        int snpW = getCurrentSnapRange();
-        for (int i = int(view_begin / snpW) * snpW;i < view_end; i+=snpW) 
-        {
-            float drawX = ofMap(i, view_begin, view_end, 0, seekWidth);
-            ofSetColor(150);
-            ofDrawLine(drawX, 0, drawX, area.height);
-        }
-    }
 
     //ブロックの端描画とホバー判定
     for (int i = 0;i < kp.size();i++)
