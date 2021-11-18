@@ -10,7 +10,6 @@ void timeline::update() {
     {
         if (paused)
         {
-            // started = 
             started = ofGetElapsedTimeMillis() - passed;
         }
         else
@@ -18,10 +17,10 @@ void timeline::update() {
             passed = ofGetElapsedTimeMillis() - started;
         }
 
-        if (passed > duration)
+        if (passed > getDuration())
         {
             sendOsc();
-            if (isLoop) play();
+            if (getIsLoop()) play();
             else stop();
         }
     }
@@ -42,11 +41,11 @@ void timeline::sendOsc()
     {
         ofxOscMessage pm;
         pm.setAddress("/time");
-        pm.addIntArg(MIN(passed, duration));
-        pm.addIntArg(duration);
+        pm.addIntArg(MIN(getPassed(), getDuration()));
+        pm.addIntArg(getDuration());
         sender.sendMessage(pm);
 
-        for (auto & tr : tracks)
+        for (auto & tr : getCurrentChapter()->tracks)
         {
             ofxOscMessage m;
             bool sendEnable = tr->oscSend;
@@ -63,8 +62,6 @@ void timeline::sendOsc()
             }
             if (t == TRACK_EVENT)
             {
-                // FIXME: 再生開始時、直是のイベントが発火してしまう
-                // FIXME: イベントが複数トラックになっていると処置しきれない
                 tm_event mes = getEventParameter(tr, 0, -1, 1);
 
                 sendEnable = false;
@@ -132,7 +129,7 @@ ofPtr<trackBase> timeline::addTrack(string name, trackType tp, bool newTrack)
 {
     auto nt = make_shared<trackBase>();
     nt->setup(name, tp, newTrack);
-    tracks.push_back(nt);
+    getCurrentChapter()->tracks.push_back(nt);
     return nt;
 }
 
@@ -143,77 +140,98 @@ void timeline::drawGui()
 #endif
 }
 
-void timeline::clear()
+void timeline::clear(bool completely)
 {
+    //completely = trueの場合、チャプターが0なのですぐにチャプターを作成する必要がある
     currentPath = currentFileName = "";
-    tracks.clear();
+    clearChapter(completely);
 }
 
 void timeline::load(string path)
 {
-    clear();
+    clear(true);
 
     currentPath = path;
     currentFileName = ofSplitString(ofSplitString(path, "/", true, true).back(), "\\", true, true).back();
 
-    cout << "CurrentPATH :" << currentPath << endl;
     ofJson j = ofLoadJson(path);
-    j = j["timeline"];
+    ofJson j_tm = j["timeline"];
 
-    setDuration(j["duration"].get<int>());
-    if (!j["isLoop"].empty()) isLoop = j["isLoop"].get<bool>();
-    if (!j["osc"]["sendAddr"].empty()) sendAddr = j["osc"]["sendAddr"].get<string>();
-    if (!j["osc"]["sendPort"].empty()) sendPort = j["osc"]["sendPort"].get<int>();
-    if (!j["osc"]["recvPort"].empty()) recvPort = j["osc"]["recvPort"].get<int>();
-
-    //トラックの追加
-    for (auto & jtr : j["tracks"])
+    //タイムライン全体設定
+    if (!j["settings"].empty())
     {
-        //トラックの読み込んだプロパティはここで設定 
-        auto nt = addTrack(jtr["name"], trackType(jtr["type"].get<int>()), false);
-        nt->oscSend = jtr["oscSend"].get<bool>();
-        nt->view_height = jtr["view_height"].get<float>();
+        if (!j["osc"]["sendAddr"].empty()) sendAddr = j["osc"]["sendAddr"].get<string>();
+        if (!j["osc"]["sendPort"].empty()) sendPort = j["osc"]["sendPort"].get<int>();
+        if (!j["osc"]["recvPort"].empty()) recvPort = j["osc"]["recvPort"].get<int>();
+    }
 
-        //トラックのparamにキーポイントを追加
-        //paramsの数はtrackTypeによって保証されている前提
-        auto & params = nt->getParamsRef();
-        for (int i = 0;i < params.size(); i++)
-        {            
-            if (i < jtr["params"].size())
-            {
-                auto & j_pr = jtr["params"][i];
+    // チャプターの追加
+    for (int ts = 0;ts < j_tm.size();ts++)
+    {
+        //====================================================旧式（チャプター無し時代）の処理
+        if (j_tm.type() == nlohmann::detail::value_t::object)
+        {
+            if (ts > 0) break;
+            j = j_tm;
+            if (!j["osc"]["sendAddr"].empty()) sendAddr = j["osc"]["sendAddr"].get<string>();
+            if (!j["osc"]["sendPort"].empty()) sendPort = j["osc"]["sendPort"].get<int>();
+            if (!j["osc"]["recvPort"].empty()) recvPort = j["osc"]["recvPort"].get<int>();
+        }
+        if (j_tm.type() == nlohmann::detail::value_t::array)  j = j_tm[ts];
 
-                //特殊パラメータ型の処置
-                if (j_pr["type"].get<int>() == int(PTYPE_JSONSTREAM))
+        string chapterName = "";
+        if (!j["chapterName"].empty()) chapterName = j["chapterName"].get<string>();
+        createChapter(chapterName, j["duration"].get<int>());
+
+        setDuration(j["duration"].get<int>());
+        if (!j["isLoop"].empty()) setIsLoop(j["isLoop"].get<bool>());
+
+        //トラックの追加
+        for (auto & jtr : j["tracks"])
+        {
+            //トラックの読み込んだプロパティはここで設定 
+            auto nt = addTrack(jtr["name"], trackType(jtr["type"].get<int>()), false);
+            nt->oscSend = jtr["oscSend"].get<bool>();
+            nt->view_height = jtr["view_height"].get<float>();
+
+            //トラックのparamにキーポイントを追加
+            //paramsの数はtrackTypeによって保証されている前提
+            auto & params = nt->getParamsRef();
+            for (int i = 0;i < params.size(); i++)
+            {            
+                if (i < jtr["params"].size())
                 {
-                    jsonParam* jsonpr = (jsonParam*)params[i].get();
-                    jsonpr->parseJson(j_pr);
-                }
-
-                for (int j = 0;j < j_pr["keyPoints"].size();j++)
-                {
-                    params[i]->addKeyPoint(j_pr["keyPoints"][j]);
-                    //キーポイントの該当ブロックにパラメータを設定
-                    for (int o = 0;o < j_pr["blocks"].size();o++)
+                    auto & j_pr = jtr["params"][i];
+                    //特殊パラメータ型の処置
+                    if (j_pr["type"].get<int>() == int(PTYPE_JSONSTREAM))
                     {
-                        auto & j_br = j_pr["blocks"][o][j];
-                        auto & b = params[i]->getBlocks(o)[j];
-                        b->setInherit(j_br["inherit"].get<bool>());
-                        if (!j_br["keep"].empty()) b->setKeep(j_br["keep"].get<bool>());
-                        b->setFrom(j_br["from"].get<float>());
-                        b->setTo(j_br["to"].get<float>());
-                        b->eventName = j_br["eventName"].get<string>();
-                        b->setComplement(complementType(j_br["cmplType"].get<int>()));
-                        b->easeInFlag = j_br["easeIn"].get<bool>();
-                        b->easeOutFlag = j_br["easeOut"].get<bool>();
+                        jsonParam* jsonpr = (jsonParam*)params[i].get();
+                        jsonpr->parseJson(j_pr);
+                    }
+                    for (int j = 0;j < j_pr["keyPoints"].size();j++)
+                    {
+                        params[i]->addKeyPoint(j_pr["keyPoints"][j]);
+                        //キーポイントの該当ブロックにパラメータを設定
+                        for (int o = 0;o < j_pr["blocks"].size();o++)
+                        {
+                            auto & j_br = j_pr["blocks"][o][j];
+                            auto & b = params[i]->getBlocks(o)[j];
+                            b->setInherit(j_br["inherit"].get<bool>());
+                            if (!j_br["keep"].empty()) b->setKeep(j_br["keep"].get<bool>());
+                            b->setFrom(j_br["from"].get<float>());
+                            b->setTo(j_br["to"].get<float>());
+                            b->eventName = j_br["eventName"].get<string>();
+                            b->setComplement(complementType(j_br["cmplType"].get<int>()));
+                            b->easeInFlag = j_br["easeIn"].get<bool>();
+                            b->easeOutFlag = j_br["easeOut"].get<bool>();
+                        }
                     }
                 }
+                params[i]->refleshInherit();
             }
+        }//for (auto & jtr : j["tracks"])
 
-            params[i]->refleshInherit();
-        }
-
-    }
+    }// for (int ts = 0;ts < j_tm.size();ts++)
 
     sender.setup(sendAddr, sendPort);
     receiver.setup(recvPort);
@@ -225,36 +243,43 @@ void timeline::save(string path)
     currentPath = path;
     currentFileName = ofSplitString(ofSplitString(path, "/", true, true).back(), "\\", true, true).back();
 
-
+    ofJson & j_st = j["settings"];
     ofJson & j_tm = j["timeline"];
-    j_tm["duration"] = duration;
-    j_tm["isLoop"] = isLoop;
-    j_tm["osc"]["sendAddr"] = sendAddr;
-    j_tm["osc"]["sendPort"] = sendPort;
-    j_tm["osc"]["recvPort"] = recvPort;
+    
+    j_st["osc"]["sendAddr"] = sendAddr;
+    j_st["osc"]["sendPort"] = sendPort;
+    j_st["osc"]["recvPort"] = recvPort;
 
-    for (auto & t : tracks)
-        j_tm["tracks"].push_back(t->getJsonData());
+    for (auto & c : chapters)
+    {
+        ofJson chj;
+        chj["duration"] = getDuration();
+        chj["isLoop"] = getIsLoop();
+
+        for (auto & t : c->tracks) chj["tracks"].push_back(t->getJsonData());
+        j_tm.push_back(chj);
+    }
+    
 
     ofSavePrettyJson(path, j);
 }
 
 void timeline::removeTrack(string name)
 {
-    auto it = tracks.begin();
-    while(it != tracks.end())
+    auto it = getCurrentChapter()->tracks.begin();
+    while(it != getCurrentChapter()->tracks.end())
     {
-        if ((*it)->getName() == name) it = tracks.erase(it);
+        if ((*it)->getName() == name) it = getCurrentChapter()->tracks.erase(it);
         else ++it;
     }
 }
 void timeline::upTrack(ofPtr<trackBase> tr)
 {
-    for (int i = 1;i < tracks.size();i++)
+    for (int i = 1;i < getCurrentChapter()->tracks.size();i++)
     {
-        if (tracks[i] == tr)
+        if (getCurrentChapter()->tracks[i] == tr)
         {
-            swap(tracks[i], tracks[i-1]);
+            swap(getCurrentChapter()->tracks[i], getCurrentChapter()->tracks[i-1]);
             break;
         }
     }
@@ -262,11 +287,11 @@ void timeline::upTrack(ofPtr<trackBase> tr)
 
 void timeline::downTrack(ofPtr<trackBase> tr)
 {
-    for (int i = 0;i < tracks.size()-1;i++)
+    for (int i = 0;i < getCurrentChapter()->tracks.size()-1;i++)
     {
-        if (tracks[i] == tr)
+        if (getCurrentChapter()->tracks[i] == tr)
         {
-            swap(tracks[i], tracks[i+1]);
+            swap(getCurrentChapter()->tracks[i], getCurrentChapter()->tracks[i+1]);
             break;
         }
     }
@@ -293,7 +318,7 @@ void timeline::setReceiverPort(int port)
 tm_event timeline::getEventParameter(ofPtr<trackBase> & tr, int paramIndex, int time, int callOrigin)
 {
     if (time < 0) time = passed;
-    tm_event ret = tr->getParamsRef()[paramIndex]->get<tm_event>(time, duration);
+    tm_event ret = tr->getParamsRef()[paramIndex]->get<tm_event>(time, getDuration());
 
     if (tr->eventCallOrigin[callOrigin] != ret.time)
     {
@@ -302,4 +327,62 @@ tm_event timeline::getEventParameter(ofPtr<trackBase> & tr, int paramIndex, int 
         if (ret.label != "" && !getPaused()) return ret;
     }
     return tm_event();
+}
+
+void timeline::createChapter(string name, uint64_t duration, bool setToCurrent)
+{
+    auto ch = make_shared<chapter>();
+    if (name == "") name = "chapter-" + ofToString(chapters.size());
+    ch->name = name;
+    ch->duration = duration;
+    chapters.push_back(ch);
+    if (setToCurrent) setChapter(chapters.size() - 1);
+}
+
+void timeline::setChapter(string name)
+{
+    for (int i = 0;i < chapters.size();i++)
+    {
+        if (chapters[i]->name == name) setChapter(i);
+    }
+}
+
+void timeline::setChapter(int index)
+{
+    if (index < 0 || chapters.size() <= index) return;
+    currentChapterIndex = index;
+}
+
+void timeline::removeChapter(int index)
+{
+    if (index < 0 || chapters.size() <= index) return;
+    removeChapter(chapters[index]->name);
+}
+
+void timeline::removeChapter(string name)
+{
+    auto it = chapters.begin();
+    while (it != chapters.end())
+    {
+        if ((*it)->name == name) it = chapters.erase(it);
+        else ++it;
+    }
+}
+
+void timeline::clearChapter(bool completely)
+{
+    for (auto & c : chapters) c.reset();
+    chapters.clear();
+    
+    if (!completely)
+    {
+        createChapter("chapter-0", 3000);
+    }
+}
+
+vector<string> timeline::getChapterNames()
+{
+    vector<string> ret;
+    for (auto & c : chapters) ret.push_back(c->name);
+    return ret;
 }

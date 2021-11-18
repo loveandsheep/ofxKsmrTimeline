@@ -529,6 +529,24 @@ void timelineViewer::keyPressed(ofKeyEventArgs & key){
         selParentParam.clear();
     }
 
+    if (key.key == OF_KEY_PAGE_UP)
+    {
+        int idx = tm->getCurrentChapterIndex();
+        idx--;
+        if (idx < 0) idx = tm->getChapterSize() - 1;
+        tm->setChapter(idx);
+        zoomOut();
+    }
+
+    if (key.key == OF_KEY_PAGE_DOWN)
+    {
+        int idx = tm->getCurrentChapterIndex();
+        idx++;
+        idx %= tm->getChapterSize();
+        tm->setChapter(idx);
+        zoomOut();
+    }
+
 
 }
 
@@ -708,6 +726,26 @@ void timelineViewer::drawGui()
     ImGui::SameLine();
     if (ImGui::Button("Json")) createNewTrack("json", TRACK_JSONSTREAM);
     
+    ImGui::Text(" \n=== Chapter ===");
+    vector<string> chapterNames = tm->getChapterNames();
+    gui_chapterIndex = tm->getCurrentChapterIndex();
+
+    if (ImGui::Button("New Chapter")) {
+        tm->createChapter("", tm->getDuration());
+    }
+
+    if (combo("Chapter", &gui_chapterIndex, chapterNames))
+    {
+        tm->setChapter(gui_chapterIndex);
+        zoomOut();
+    }
+
+    strcpy(gui_chapterName, tm->getCurrentChapter()->name.c_str());
+    if (ImGui::InputText("ChapterName", gui_chapterName, numChapterName))
+    {
+        tm->getCurrentChapter()->name = string(gui_chapterName);
+    }
+
     ImGui::Text(" \n=== Edit ===");
     ImGui::Checkbox("Snap", &doSnap);
     
@@ -786,7 +824,12 @@ void timelineViewer::drawGui()
         stopVideo();
     }
     ImGui::SameLine();
-    ImGui::Checkbox("Loop", &tm->isLoop);
+
+    gui_isLoop = tm->getIsLoop();
+    if (ImGui::Checkbox("Loop", &gui_isLoop))
+    {
+        tm->setIsLoop(gui_isLoop);
+    }
 
     ImGui::Text(" \n=== OSC ===");
     ImGui::Checkbox("Send on seek", &tm->sendOnSeek);

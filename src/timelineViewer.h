@@ -124,12 +124,16 @@ protected:
     static const int numTrackText = 64;
     char gui_trackInput[numTrackText] = {0};
     static const int numOscAddrText = 64;
+    static const int numChapterName = 64;
+    char gui_chapterName[numChapterName] = {0};
     char gui_oscAddrInput[numOscAddrText]= "localhost";
     int gui_oscSendPort = 12400;
     int gui_oscReceivePort = 12500;
     bool gui_oscSendOnSeek = true;
+    bool gui_isLoop = false;
     float guiTrackFloat_to = 0;
     float guiTrackFloat_from = 0;
+    int gui_chapterIndex = 0;
     ofFloatColor guiColor_from;
     ofFloatColor guiColor_to;
 
