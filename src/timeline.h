@@ -24,6 +24,9 @@ public:
     void save(string path);
     void clear(bool completely = false);
 
+    void setFromJson(ofJson data);
+    ofJson getJsonData();
+
     // タイムラインの再生・シーク
     void play();
     void stop();

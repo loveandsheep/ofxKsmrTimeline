@@ -6,6 +6,45 @@ void timeline::setup() {
 }
 
 timelineState timeline::update() {
+
+    while (receiver.hasWaitingMessages())
+    {
+        ofxOscMessage m;
+        receiver.getNextMessage(m);
+
+        //JSONデータの読み出し
+        if (m.getAddress() == "/json/set")
+        {
+            setFromJson(ofJson::parse(m.getArgAsString(0)));
+        }
+
+        // ip-Syncモードで送るsyncシグナル
+        // 現在時刻その他の情報を返す
+        if (m.getAddress() == "/sync")
+        {
+            ofxOscSender repSender;
+            ofxOscMessage reply;
+            repSender.setup(m.getRemoteHost(), sendPort);
+            reply.setAddress("/return/sync");
+            reply.addIntArg(getPassed());
+            repsender.sendMessage(reply);
+        }
+
+        if (m.getAddress() == "/json/get")
+        {
+            ofxOscSender repSender;
+            ofxOscMessage reply;
+            repSender.setup(m.getRemoteHost(), sendPort);
+            reply.setAddress("/return/json/get");
+            reply.addStringArg(getJsonData().dump());
+            repSender.sendMessage(reply);
+        }
+
+        if (m.getAddress() == "/return/json/get")
+            setFromJson(ofJson::parse(m.getArgAsString(0)));
+
+    }
+
     timelineState ret = STATE_IDLE;
     if (isPlay)
     {
@@ -154,12 +193,14 @@ void timeline::clear(bool completely)
 
 void timeline::load(string path)
 {
-    clear(true);
-
     currentPath = path;
     currentFileName = ofSplitString(ofSplitString(path, "/", true, true).back(), "\\", true, true).back();
+    setFromJson(ofLoadJson(path));
+}
 
-    ofJson j = ofLoadJson(path);
+void timeline::setFromJson(ofJson j)
+{
+    clear(true);
     ofJson j_tm = j["timeline"];
 
     //タイムライン全体設定
@@ -244,10 +285,14 @@ void timeline::load(string path)
 
 void timeline::save(string path)
 {
-    ofJson j;
     currentPath = path;
     currentFileName = ofSplitString(ofSplitString(path, "/", true, true).back(), "\\", true, true).back();
+    ofSavePrettyJson(path, getJsonData());
+}
 
+ofJson timeline::getJsonData()
+{
+    ofJson j;
     ofJson & j_st = j["settings"];
     ofJson & j_tm = j["timeline"];
     
@@ -264,9 +309,8 @@ void timeline::save(string path)
         for (auto & t : c->tracks) chj["tracks"].push_back(t->getJsonData());
         j_tm.push_back(chj);
     }
-    
 
-    ofSavePrettyJson(path, j);
+    return j;
 }
 
 void timeline::removeTrack(string name)
