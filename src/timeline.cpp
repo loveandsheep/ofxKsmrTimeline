@@ -27,7 +27,7 @@ timelineState timeline::update() {
             repSender.setup(m.getRemoteHost(), sendPort);
             reply.setAddress("/return/sync");
             reply.addIntArg(getPassed());
-            repsender.sendMessage(reply);
+            repSender.sendMessage(reply);
         }
 
         if (m.getAddress() == "/json/get")
