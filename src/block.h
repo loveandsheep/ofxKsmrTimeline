@@ -70,6 +70,8 @@ public:
         j["cmplType"] = int(cmplType);
         j["easeIn"] = easeInFlag;
         j["easeOut"] = easeOutFlag;
+        j["accel"] = accel;
+        j["decel"] = decel;
 
         return j;
     }
@@ -113,6 +115,7 @@ public:
     //台形駆動
     float accel = 0.25;
     float decel = 0.25;
+    float speed_max = 0;
 
     float dump_T = 0;
     float dump_spd = 0, dump_topY = 0;

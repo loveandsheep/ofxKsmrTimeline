@@ -1,6 +1,5 @@
 ﻿#include "timelineViewer.h"
 
-#define TARGET_WIN32
 #if defined(TARGET_WIN32)
 
 void timelineViewer::setup(ofPtr<timeline> tmPtr) {
@@ -19,7 +18,6 @@ void timelineViewer::setup(ofPtr<timeline> tmPtr) {
 
 void timelineViewer::update() {
 }
-
 
 void timelineViewer::draw(ofRectangle area) {
     ofPushStyle();
@@ -1074,6 +1072,8 @@ void timelineViewer::drawParameterGui(ofPtr<block> & b, ofPtr<param> & p)
     {
         ImGui::DragFloat("Accel", &b->accel, 0.01, 0.1, 1000);
         ImGui::DragFloat("Decel", &b->decel, 0.01, 0.1, 1000);
+        string sp = "Speed :" + ofToString(b->speed_max);
+        ImGui::Text(sp.c_str());
     }
 
 }

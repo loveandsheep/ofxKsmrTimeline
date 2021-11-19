@@ -74,6 +74,7 @@ float block::getRampControl(float x, uint64_t const & length)
 
     float ret = 0;
 
+    speed_max = speed;
     dump_T = T;
     dump_topY = top_y;
     dump_spd = speed;

@@ -12,8 +12,6 @@ void timeline::sendSyncJsonData(string host, int port)
     if (port == 0) port = getSendPort();
 
     ofxOscSender s;
-    cout << "===Setup :" << host << endl;
-    cout << "===Posr :" << port << endl;
     s.setup(host, port);
 
     ofJson syncJson = getJsonData();
@@ -53,8 +51,6 @@ timelineState timeline::update() {
         {
             json_piece.resize(m.getArgAsInt(2));
             json_piece[m.getArgAsInt(1)] = m.getArgAsString(0);
-            cout << "===PIECE===" << endl;
-            cout << json_piece[m.getArgAsInt(1)] << endl;
         }
 
         if (m.getAddress() == "/json/set/parse")
@@ -64,8 +60,6 @@ timelineState timeline::update() {
             {
                 d += jp;
             }
-            cout << "===DOCK===" << endl;
-            cout << d << endl;
             setFromJson(ofJson::parse(d));
         }
 
@@ -239,9 +233,9 @@ void timeline::clear(bool completely)
 
 void timeline::load(string path)
 {
+    setFromJson(ofLoadJson(path));
     currentPath = path;
     currentFileName = ofSplitString(ofSplitString(path, "/", true, true).back(), "\\", true, true).back();
-    setFromJson(ofLoadJson(path));
 }
 
 void timeline::setFromJson(ofJson j)
@@ -316,6 +310,8 @@ void timeline::setFromJson(ofJson j)
                             b->setComplement(complementType(j_br["cmplType"].get<int>()));
                             b->easeInFlag = j_br["easeIn"].get<bool>();
                             b->easeOutFlag = j_br["easeOut"].get<bool>();
+                            if (!j_br["accel"].empty()) b->accel = j_br["accel"].get<float>();
+                            if (!j_br["decel"].empty()) b->decel = j_br["decel"].get<float>();
                         }
                     }
                 }
@@ -331,9 +327,9 @@ void timeline::setFromJson(ofJson j)
 
 void timeline::save(string path)
 {
+    ofSavePrettyJson(path, getJsonData());
     currentPath = path;
     currentFileName = ofSplitString(ofSplitString(path, "/", true, true).back(), "\\", true, true).back();
-    ofSavePrettyJson(path, getJsonData());
 }
 
 ofJson timeline::getJsonData()

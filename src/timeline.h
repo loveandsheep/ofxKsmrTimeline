@@ -64,6 +64,13 @@ public:
     void downTrack(ofPtr<trackBase> tr);
 
     vector<ofPtr<trackBase> > & getTracks(){return getCurrentChapter()->tracks;}
+    ofPtr<trackBase> getTrack(string name)
+    {
+        for (auto & t : getCurrentChapter()->tracks)
+        {
+            if (name == t->getName()) return t;
+        }
+    }
     
     void drawGui();
 
