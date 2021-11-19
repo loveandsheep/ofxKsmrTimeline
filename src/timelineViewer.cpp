@@ -124,6 +124,8 @@ void timelineViewer::drawBrush(ofRectangle area)
 
 void timelineViewer::drawPeek(ofRectangle area)
 {
+    if (tm->getDuration() < view_end) zoomOut();
+
     ofPushStyle();
     ofPushMatrix();
     ofTranslate(area.getPosition());
@@ -713,6 +715,25 @@ void timelineViewer::drawGui()
     guiHovered = ImGui::IsAnyWindowHovered() | ImGui::IsAnyItemActive();
     string nextTrackNum = ofToString(tm->getTracks().size() + 1);
     
+    if (ImGui::Button("Sync")) gui_syncWindow ^= true;
+    ImGui::Begin("Sync panel", &gui_syncWindow);
+
+    if (ImGui::Button("Send"))
+    {
+        tm->sendSyncJsonData();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Get"))
+    {
+        ofxOscSender sender;
+        ofxOscMessage m;
+        m.setAddress("/json/get");
+        sender.setup(tm->getSendAddr(), tm->getSendPort());
+        sender.sendMessage(m);
+    }
+    ImGui::End();
+
+
     ImGui::Text("=== Add Track ===");
     if (ImGui::Button("Float")) createNewTrack("float", TRACK_FLOAT);
     ImGui::SameLine();

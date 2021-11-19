@@ -44,6 +44,7 @@ public:
     void setIsLoop(bool b){getCurrentChapter()->isLoop = b;}
 
     //その他メソッド
+    void sendSyncJsonData(string host = "", int port = 0);
     ofxOscSender & getSender(){return sender;}
     void sendOsc();
 
@@ -51,6 +52,7 @@ public:
     timelineState update();
     void draw();
 
+    vector<string> json_piece;
 
     //セッター
     void setDuration(uint64_t d){getCurrentChapter()->duration = d;}

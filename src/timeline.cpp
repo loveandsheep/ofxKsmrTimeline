@@ -3,6 +3,42 @@
 void timeline::setup() {
     sender.setup(sendAddr, sendPort);
     receiver.setup(recvPort);
+    clear();
+}
+
+void timeline::sendSyncJsonData(string host, int port)
+{
+    if (host == "") host = getSendAddr();
+    if (port == 0) port = getSendPort();
+
+    ofxOscSender s;
+    cout << "===Setup :" << host << endl;
+    cout << "===Posr :" << port << endl;
+    s.setup(host, port);
+
+    ofJson syncJson = getJsonData();
+    syncJson["settings"].erase("osc");
+
+    string dat = syncJson.dump();
+
+    int pieceSize = 100;
+
+    for (int i = 0;i <= dat.length() / pieceSize ;i++)
+    {
+        ofxOscMessage mes;
+        mes.setAddress("/json/set");
+        int st = i * pieceSize;
+        int ed = MIN(dat.length(), (i + 1) * pieceSize);
+        mes.addStringArg(dat.substr(st, ed - st));
+        mes.addIntArg(i);
+        mes.addIntArg(dat.length() / pieceSize + 1);
+        s.sendMessage(mes);
+    }
+
+    ofxOscMessage joiner;
+    joiner.setAddress("/json/set/parse");
+
+    s.sendMessage(joiner);
 }
 
 timelineState timeline::update() {
@@ -15,7 +51,22 @@ timelineState timeline::update() {
         //JSONデータの読み出し
         if (m.getAddress() == "/json/set")
         {
-            setFromJson(ofJson::parse(m.getArgAsString(0)));
+            json_piece.resize(m.getArgAsInt(2));
+            json_piece[m.getArgAsInt(1)] = m.getArgAsString(0);
+            cout << "===PIECE===" << endl;
+            cout << json_piece[m.getArgAsInt(1)] << endl;
+        }
+
+        if (m.getAddress() == "/json/set/parse")
+        {
+            string d = "";
+            for (auto & jp : json_piece)
+            {
+                d += jp;
+            }
+            cout << "===DOCK===" << endl;
+            cout << d << endl;
+            setFromJson(ofJson::parse(d));
         }
 
         // ip-Syncモードで送るsyncシグナル
@@ -32,13 +83,8 @@ timelineState timeline::update() {
 
         if (m.getAddress() == "/json/get")
         {
-            ofxOscSender repSender;
-            ofxOscMessage reply;
-            repSender.setup(m.getRemoteHost(), sendPort);
-            reply.setAddress("/return/json/get");
-            reply.addStringArg(getJsonData().dump());
-            repSender.sendMessage(reply);
-        }
+            sendSyncJsonData(m.getRemoteHost(), sendPort);
+        } 
 
         if (m.getAddress() == "/return/json/get")
             setFromJson(ofJson::parse(m.getArgAsString(0)));
@@ -206,9 +252,9 @@ void timeline::setFromJson(ofJson j)
     //タイムライン全体設定
     if (!j["settings"].empty())
     {
-        if (!j["osc"]["sendAddr"].empty()) sendAddr = j["osc"]["sendAddr"].get<string>();
-        if (!j["osc"]["sendPort"].empty()) sendPort = j["osc"]["sendPort"].get<int>();
-        if (!j["osc"]["recvPort"].empty()) recvPort = j["osc"]["recvPort"].get<int>();
+        if (!j["settings"]["osc"]["sendAddr"].empty()) sendAddr = j["settings"]["osc"]["sendAddr"].get<string>();
+        if (!j["settings"]["osc"]["sendPort"].empty()) sendPort = j["settings"]["osc"]["sendPort"].get<int>();
+        if (!j["settings"]["osc"]["recvPort"].empty()) recvPort = j["settings"]["osc"]["recvPort"].get<int>();
     }
 
     // チャプターの追加

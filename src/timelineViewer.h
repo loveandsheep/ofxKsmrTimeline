@@ -133,6 +133,7 @@ protected:
     bool gui_isLoop = false;
     float guiTrackFloat_to = 0;
     float guiTrackFloat_from = 0;
+    bool gui_syncWindow = false;
     int gui_chapterIndex = 0;
     ofFloatColor guiColor_from;
     ofFloatColor guiColor_to;
