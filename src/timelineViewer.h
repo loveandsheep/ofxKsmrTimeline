@@ -54,6 +54,12 @@ public:
     bool isGuiHovered = false;
     bool isEditorHovered = false;
 
+    //同期関連==============================
+    void play();
+    void stop();
+    void seek(uint64_t millis);
+    void setPause(bool b);
+    
     //動画周り
     void setSyncVideo(bool enable, ofPtr<tm_videoPlayer> v = nullptr);
 
