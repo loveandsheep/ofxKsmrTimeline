@@ -23,7 +23,7 @@ enum trackType {
 class trackBase {
 public:
     void setup(string name, trackType type, bool newTrack);
-    void update();
+    virtual void update(){};
     
     //
 

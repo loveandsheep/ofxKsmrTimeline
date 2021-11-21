@@ -40,7 +40,7 @@ void timeline::sendSyncJsonData(string host, int port)
 }
 
 timelineState timeline::update() {
-
+    
     while (receiver.hasWaitingMessages())
     {
         ofxOscMessage m;
