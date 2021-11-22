@@ -37,6 +37,8 @@ public:
     ofVec3f getVec3f(uint64_t const & time, uint64_t const & duration);
     float   getBlockValue(int numBlock, uint64_t const & time, uint64_t const & duration);
     
+    int getBlockIndexByTime(uint64_t millis);
+    vector<ofPtr<block> > pickBlocksByTime(uint64_t millis);
     vector<ofPtr<block> > pickBlocks(int number);
 
     int  addKeyPoint(uint64_t const & time);

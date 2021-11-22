@@ -86,6 +86,7 @@ timelineState timeline::update() {
     }
 
     timelineState ret = STATE_IDLE;
+
     if (isPlay)
     {
         if (paused)
@@ -109,6 +110,8 @@ timelineState timeline::update() {
     }
 
     sendOsc();
+
+    for (auto & tr : getTracks()) tr->update(ret, getPassed());
     return ret;
 }
 
@@ -211,9 +214,20 @@ void timeline::setPause(bool b)
 
 ofPtr<trackBase> timeline::addTrack(string name, trackType tp, bool newTrack)
 {
-    auto nt = make_shared<trackBase>();
-    nt->setup(name, tp, newTrack);
-    getCurrentChapter()->tracks.push_back(nt);
+    ofPtr<trackBase> nt;
+    if (tp == TRACK_MOTOR)
+    {
+        nt = make_shared<motorTrack>();
+        nt->setup(name, tp, newTrack);
+        getCurrentChapter()->tracks.push_back(nt);
+    }
+    else
+    {
+        nt = make_shared<trackBase>();
+        nt->setup(name, tp, newTrack);
+        getCurrentChapter()->tracks.push_back(nt);
+    }
+
     return nt;
 }
 

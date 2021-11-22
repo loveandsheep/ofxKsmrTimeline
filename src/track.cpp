@@ -47,6 +47,7 @@ void trackBase::setup(string name, trackType type, bool newTrack)
         params.push_back(np);
     }
 
+
     if (newTrack) for (auto & p : params) p->addKeyPoint(0);
     //TODO: タイプを増やすよ
 }

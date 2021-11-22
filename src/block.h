@@ -1,5 +1,6 @@
 #pragma once
 #include "ofMain.h"
+#include "timelineUtils.h"
 
 enum complementType {
     CMPL_LINEAR,

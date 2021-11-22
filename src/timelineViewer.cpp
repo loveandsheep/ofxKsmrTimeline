@@ -17,6 +17,7 @@ void timelineViewer::setup(ofPtr<timeline> tmPtr) {
 }
 
 void timelineViewer::update() {
+    
 }
 
 void timelineViewer::draw(ofRectangle area) {
@@ -215,6 +216,11 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
                 jtr->calcParameters(jtr->keyNames[jtr->keyIndex]);
             }
         }
+    }
+
+    if (tr->getType() == TRACK_MOTOR)
+    {
+        // if ()
     }
 
     strcpy(gui_trackInput, tr->getName().substr(0, numEventText).c_str());
@@ -744,6 +750,8 @@ void timelineViewer::drawGui()
     if (ImGui::Button("Vec3")) createNewTrack("vec3", TRACK_VEC3);
     ImGui::SameLine();
     if (ImGui::Button("Json")) createNewTrack("json", TRACK_JSONSTREAM);
+
+    if (ImGui::Button("Motor")) createNewTrack("motor", TRACK_MOTOR);
     
     ImGui::Text(" \n=== Chapter ===");
     vector<string> chapterNames = tm->getChapterNames();

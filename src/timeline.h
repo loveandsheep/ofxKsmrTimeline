@@ -1,6 +1,7 @@
 #pragma once
 #include "ofMain.h"
 #include "./track.h"
+#include "./motorTrack.h"
 #include "ofxOsc.h"
 
 class chapter {
@@ -9,13 +10,6 @@ public:
     uint64_t                    duration = 1000;
     bool                        isLoop = false;
     vector<ofPtr<trackBase> >   tracks;
-};
-
-enum timelineState {
-    STATE_IDLE,
-    STATE_PLAYING,
-    STATE_PAUSE,
-    STATE_FINISHED,
 };
 
 class timeline {

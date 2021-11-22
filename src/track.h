@@ -22,8 +22,8 @@ enum trackType {
 // 各クラスへの指示もここから出す
 class trackBase {
 public:
-    void setup(string name, trackType type, bool newTrack);
-    virtual void update(){};
+    virtual void setup(string name, trackType type, bool newTrack);
+    virtual void update(timelineState state, uint64_t passed){};
     
     //
 

@@ -12,6 +12,21 @@ void param::setType(paramType tp)
     if (tp == PTYPE_JSONSTREAM) numUsingBlockLine = 1;
 }
 
+int param::getBlockIndexByTime(uint64_t millis)
+{
+    int index = 0;
+    for (int i = 0;i < keyPoints.size();i++)
+    {
+        if (keyPoints[i] <= millis) index = i;
+    }
+    return index;
+}
+
+vector<ofPtr<block> > param::pickBlocksByTime(uint64_t millis)
+{
+    return pickBlocks(getBlockIndexByTime(millis));
+}
+
 //選択されたBlockと並列したBlockを列挙する（VectorやColorで参照する）
 vector<ofPtr<block> > param::pickBlocks(int number)
 {
