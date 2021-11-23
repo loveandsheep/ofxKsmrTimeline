@@ -37,6 +37,7 @@ public:
     void setName(string name){myName = name;};
     
     int view_height = 100;
+    bool fold = false;
     bool oscSend = false;
 
     virtual ofJson getJsonData();

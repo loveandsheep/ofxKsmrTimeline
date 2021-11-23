@@ -92,7 +92,7 @@ timelineState const & timeline::update() {
 
         if (m.getAddress() == "/json/get")
         {
-            sendSyncJsonData(m.getRemoteHost(), sendPort);
+            sendSyncJsonData(m.getRemoteHost(), m.getArgAsInt(0));
         } 
 
         if (m.getAddress() == "/return/json/get")

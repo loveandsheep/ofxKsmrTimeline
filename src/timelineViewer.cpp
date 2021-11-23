@@ -26,7 +26,7 @@ void timelineViewer::draw(ofRectangle area) {
     
     float heightSum = peek_height + 30;
     for (auto & tr : tm->getTracks())
-        heightSum += tr->view_height + 5;
+        heightSum += (tr->fold ? foldedHeight : tr->view_height) + 5;
     
     area.height = heightSum;
 
@@ -50,7 +50,7 @@ void timelineViewer::draw(ofRectangle area) {
     {
         //ビューの高さ調整
         ofRectangle peekArea = track_area;
-        peekArea.y += trs[i]->view_height;
+        peekArea.y += trs[i]->fold ? foldedHeight : trs[i]->view_height;
         peekArea.setHeight(5);
         if (peekArea.inside(ofGetMouseX(), ofGetMouseY()))
         {
@@ -167,7 +167,7 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
     ofPushStyle();
     ofPushMatrix();
 
-    area.height = tr->view_height;
+    area.height = tr->fold ? foldedHeight : tr->view_height;
 
     ofSetHexColor(0x394150);
     ofDrawRectangle(area);
@@ -184,59 +184,13 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
     ofPopStyle();
 
     bool open = true;
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, ofFloatColor(0, 0));
-    ImGui::Begin(tr->getUniqueName().c_str(), &open, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+    int tpNum = int(tr->getType());
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ofFloatColor::fromHsb(tpNum / 20.0, tpNum % 2 == 0 ? 0.5 : 0.3, tpNum % 2 == 0 ? 0.3 : 0.2, 1.0));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(10, 10));
+    ImGui::Begin(tr->getUniqueName().c_str(), &open, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
     ImGui::SetWindowPos(ImVec2(area.x, area.y));
     ImGui::SetWindowSize(ImVec2(seekLeft - area.x, area.height));
     
-    if (ImGui::Button("x")) removeTrack(tr);
-    ImGui::SameLine();
-    if (ImGui::Button("Up")) tm->upTrack(tr);
-    ImGui::SameLine();
-    if (ImGui::Button("Down")) tm->downTrack(tr);
-    ImGui::SameLine();
-    ImGui::Checkbox("OSC", &tr->oscSend);
-    
-    if (tr->getType() == TRACK_JSONSTREAM)
-    {
-        jsonParam* jtr = (jsonParam*)tr->getParam(0).get();
-        ImGui::SameLine();
-        if (ImGui::Button("Load"))
-        {
-            ofFileDialogResult result = ofSystemLoadDialog("load", false, "./bin/data");        
-            if (result.bSuccess)
-            {
-                jtr->load(result.getPath());
-            }
-        }
-        if (jtr->keyNames.size() > 0)
-        {
-            if (combo("Key", &jtr->keyIndex, jtr->keyNames))
-            {
-                jtr->calcParameters(jtr->keyNames[jtr->keyIndex]);
-            }
-        }
-    }
-
-    strcpy(gui_trackInput, tr->getName().substr(0, numEventText).c_str());
-    if (ImGui::InputText("Name", gui_trackInput, numTrackText))
-    {
-        tr->setName(string(gui_trackInput));
-    }
-
-    if (tr->getType() == TRACK_MOTOR)
-    {
-        motorTrack* trPtr = (motorTrack*)tr.get();
-        ImGui::InputInt("ID", &trPtr->motorIndex);
-        ImGui::InputFloat("Deg/Step", &trPtr->stepDeg, 0.01);
-        if (ImGui::Button("Standby"))
-        {
-            trPtr->motorStandby(tm->getPassed());
-        }
-        ImGui::SameLine();
-        ImGui::Checkbox("Drive", &trPtr->doDrive);
-    }
-
     char val[1024] = {0};
     if (tr->getType() == TRACK_FLOAT) 
     {
@@ -259,10 +213,78 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
     {
         sprintf(val, "[%-8.2f]", tr->getParam(0)->getFloat(tm->getPassed(), tm->getDuration()));
     }
+
+    if (tr->getType() == TRACK_MOTOR)
+    {
+        sprintf(val, "[%-8.2f]", tr->getParam(0)->getFloat(tm->getPassed(), tm->getDuration()));
+    }
+
+    if (tr->fold)
+    {
+        if (ImGui::Button("O")) tr->fold = false;
+        ImGui::SameLine();
+        string tex = tr->getName() + ":" + string(val);
+        ImGui::Text(tex.c_str());
+    }
+    else
+    {
+        if (ImGui::Button("-")) tr->fold = true;
+        ImGui::SameLine();
+        if (ImGui::Button("x")) removeTrack(tr);
+        ImGui::SameLine();
+        if (ImGui::Button("Up")) tm->upTrack(tr);
+        ImGui::SameLine();
+        if (ImGui::Button("Down")) tm->downTrack(tr);
+        ImGui::SameLine();
+        ImGui::Checkbox("OSC", &tr->oscSend);
+        
+        if (tr->getType() == TRACK_JSONSTREAM)
+        {
+            jsonParam* jtr = (jsonParam*)tr->getParam(0).get();
+            ImGui::SameLine();
+            if (ImGui::Button("Load"))
+            {
+                ofFileDialogResult result = ofSystemLoadDialog("load", false, "./bin/data");        
+                if (result.bSuccess)
+                {
+                    jtr->load(result.getPath());
+                }
+            }
+            if (jtr->keyNames.size() > 0)
+            {
+                if (combo("Key", &jtr->keyIndex, jtr->keyNames))
+                {
+                    jtr->calcParameters(jtr->keyNames[jtr->keyIndex]);
+                }
+            }
+        }
+
+        strcpy(gui_trackInput, tr->getName().substr(0, numEventText).c_str());
+        if (ImGui::InputText("Name", gui_trackInput, numTrackText))
+        {
+            tr->setName(string(gui_trackInput));
+        }
+
+        if (tr->getType() == TRACK_MOTOR)
+        {
+            motorTrack* trPtr = (motorTrack*)tr.get();
+            ImGui::InputInt("ID", &trPtr->motorIndex);
+            ImGui::InputFloat("Deg/Step", &trPtr->stepDeg, 0.01);
+            if (ImGui::Button("Standby"))
+            {
+                trPtr->motorStandby(tm->getPassed());
+            }
+            ImGui::SameLine();
+            ImGui::Checkbox("Drive", &trPtr->doDrive);
+        }
+
+        ImGui::Text(val);
+    }
     
-    ImGui::Text(val);
+
 
     ImGui::End();
+    ImGui::PopStyleVar();
     ImGui::PopStyleColor();
     
     return area.height;
@@ -339,6 +361,11 @@ float timelineViewer::drawParam(ofPtr<param> pr, ofRectangle area, uint64_t begi
                 hoverBlock.reset();                
             }
             ofEnableBlendMode(OF_BLENDMODE_ALPHA);
+            if (bl[i]->getKeep())
+            {
+                ofSetColor(0, 0, 0, 70);
+                ofDrawRectangle(hb - area.getPosition());
+            }
 
 
             if (hb.inside(ofGetMouseX(), ofGetMouseY())) hoverBlock = bl[i];
@@ -727,6 +754,10 @@ void timelineViewer::drawGui()
     guiHovered = ImGui::IsAnyWindowHovered() | ImGui::IsAnyItemActive();
     string nextTrackNum = ofToString(tm->getTracks().size() + 1);
     
+    if (ImGui::Button("Fold")) 
+    {
+        for (auto & t : tm->getTracks()) t->fold = true;
+    }
     if (ImGui::Button("Sync")) gui_syncWindow ^= true;
     ImGui::Begin("Sync panel", &gui_syncWindow);
 
@@ -740,6 +771,7 @@ void timelineViewer::drawGui()
         ofxOscSender sender;
         ofxOscMessage m;
         m.setAddress("/json/get");
+        m.addIntArg(tm->getReceiverPort());
         sender.setup(tm->getSendAddr(), tm->getSendPort());
         sender.sendMessage(m);
     }

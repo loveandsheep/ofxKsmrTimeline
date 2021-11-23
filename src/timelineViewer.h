@@ -111,6 +111,7 @@ protected:
     bool handToolFlag = false;//スペースキー移動
     bool doSnap = true;
 
+    static const int foldedHeight = 30;
     ofPtr<block> currentViewBlock;
     bool blockGuiWindowOpen = true;
     bool blockGuiViewFirst = false;
