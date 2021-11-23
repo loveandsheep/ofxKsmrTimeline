@@ -290,6 +290,12 @@ void timeline::load(string path)
 
 void timeline::setFromJson(ofJson j)
 {
+    if (j.empty())
+    {
+        clear(false);
+        return;
+    }
+    
     clear(true);
     ofJson j_tm = j["timeline"];
 
