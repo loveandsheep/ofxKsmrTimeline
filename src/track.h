@@ -39,7 +39,8 @@ public:
     int view_height = 100;
     bool oscSend = false;
 
-    ofJson getJsonData();
+    virtual ofJson getJsonData();
+    virtual void setJsonData(ofJson j);
 
     static const int NUM_ORIGIN = 32;
     int eventCallOrigin[NUM_ORIGIN] = {0};

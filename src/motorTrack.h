@@ -5,7 +5,8 @@ class motorTrack : public trackBase {
 public:
     int motorIndex = 1;
     int lastBlock = -1;
-    bool doDrive = false;
+    float stepDeg = 0.018;
+    bool doDrive = true;
     
     virtual void setup(string name, trackType type, bool newTrack)
     {
@@ -26,8 +27,8 @@ public:
         auto p = getParamsRef()[0];
         int  index = p->getBlockIndexByTime(passed);
         auto b = p->pickBlocksByTime(passed)[0];
-        ofxModbusMotorDriver::instance().goAbs(motorIndex, b->getTo(),
-            5000,1000,1000);
+        ofxModbusMotorDriver::instance().goAbs(motorIndex, b->getTo() / stepDeg,
+            30 / stepDeg, 1000 / stepDeg,1000 / stepDeg);
     }
 
     virtual void update(timelineState state, uint64_t passed)
@@ -45,12 +46,20 @@ public:
                 }
                 else
                 {
-                    ofxModbusMotorDriver::instance().goAbs(motorIndex, b->getTo(),
-                        b->speed_max * 1000,
-                        b->accel * 1000,
-                        b->decel * 1000);
+                    //MotorRampかつKeepじゃない時かつ値が有効の時
+                    bool drive = true;
+                    
+                    if (b->getKeep()) drive = false;
+                    if (!doDrive) drive = false;
 
-                    cout << "run motor " << endl;
+                    if (drive)
+                    {
+                        ofxModbusMotorDriver::instance().goAbs(motorIndex, b->getTo() / stepDeg,
+                            b->speed_max * 1000 / stepDeg,
+                            b->accel * 1000 / stepDeg,
+                            b->decel * 1000 / stepDeg);
+                    }
+
                 }
 
                 lastBlock = index;
@@ -60,5 +69,28 @@ public:
         {
             lastBlock = -1;
         }
+    }
+
+    virtual void setJsonData(ofJson j){
+        trackBase::setJsonData(j);
+        if (!j["drive"].empty()) doDrive = j["drive"].get<bool>();
+        if (!j["motorID"].empty()) motorIndex = j["motorID"].get<int>();
+        if (!j["stepDeg"].empty()) stepDeg = j["stepDeg"].get<float>();
+    }
+
+    virtual ofJson getJsonData(){
+        ofJson j;
+        j["view_height"] = view_height;
+        j["name"] = myName;
+        j["type"] = int(myType);
+        j["oscSend"] = oscSend;
+        j["drive"] = doDrive;
+        j["motorID"] = motorIndex;
+        j["stepDeg"] = stepDeg;
+
+        for (auto & p : params)
+            j["params"].push_back(p->getJsonData());
+
+        return j;
     }
 };

@@ -3,10 +3,10 @@
 
 class timelineSyncBase{
 public:
-    virtual void play       (bool byMaster = false);
-    virtual void setPause   (bool b, bool byMaster = false);
-    virtual void stop       (bool byMaster = false);
-    virtual void setPosition(uint64_t millis, bool byMaster = false);
+    virtual void play       (bool byMaster = false){};
+    virtual void setPause   (bool b, bool byMaster = false){};
+    virtual void stop       (bool byMaster = false){};
+    virtual void setPosition(uint64_t millis, bool byMaster = false){};
 }
 
 // 再生

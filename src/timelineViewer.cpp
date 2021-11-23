@@ -218,15 +218,23 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
         }
     }
 
-    if (tr->getType() == TRACK_MOTOR)
-    {
-        // if ()
-    }
-
     strcpy(gui_trackInput, tr->getName().substr(0, numEventText).c_str());
     if (ImGui::InputText("Name", gui_trackInput, numTrackText))
     {
         tr->setName(string(gui_trackInput));
+    }
+
+    if (tr->getType() == TRACK_MOTOR)
+    {
+        motorTrack* trPtr = (motorTrack*)tr.get();
+        ImGui::InputInt("ID", &trPtr->motorIndex);
+        if (ImGui::Button("Standby"))
+        {
+            trPtr->motorStandby(tm->getPassed());
+        }
+        ImGui::SameLine();
+        ImGui::Checkbox("Drive", &trPtr->doDrive);
+        ImGui::InputFloat("Deg/Step", &trPtr->stepDeg, 0.01);
     }
 
     char val[1024] = {0};

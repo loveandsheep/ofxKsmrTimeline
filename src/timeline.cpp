@@ -291,8 +291,7 @@ void timeline::setFromJson(ofJson j)
         {
             //トラックの読み込んだプロパティはここで設定 
             auto nt = addTrack(jtr["name"], trackType(jtr["type"].get<int>()), false);
-            nt->oscSend = jtr["oscSend"].get<bool>();
-            nt->view_height = jtr["view_height"].get<float>();
+            nt->setJsonData(jtr);
 
             //トラックのparamにキーポイントを追加
             //paramsの数はtrackTypeによって保証されている前提

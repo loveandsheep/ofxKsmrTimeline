@@ -59,6 +59,11 @@ ofPtr<param> trackBase::getParam(int index)
     return params[index];
 }
 
+void trackBase::setJsonData(ofJson j){
+    oscSend = j["oscSend"].get<bool>();
+    view_height = j["view_height"].get<float>();
+}
+
 ofJson trackBase::getJsonData(){
     ofJson j;
     j["view_height"] = view_height;
