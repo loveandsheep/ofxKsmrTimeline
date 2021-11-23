@@ -39,7 +39,22 @@ void timeline::sendSyncJsonData(string host, int port)
     s.sendMessage(joiner);
 }
 
-timelineState timeline::update() {
+void timeline::drawMinimum(int x, int y)
+{
+    string info = "[timeline - " + currentFileName + "]\n";
+    info += "status :";
+    if (currentState == STATE_IDLE) info += "IDLE\n";
+    if (currentState == STATE_PLAYING) info += "PLAY\n";
+    if (currentState == STATE_PAUSE) info += "PAUSE\n";
+    if (currentState == STATE_FINISHED) info += "FINISHED\n";
+
+    info += "time     :" + ofToString(getPassed()) + "\n";
+    info += "duration :" + ofToString(getDuration()) + "\n";
+
+    ofDrawBitmapStringHighlight(info, x, y);
+}
+
+timelineState const & timeline::update() {
     
     while (receiver.hasWaitingMessages())
     {
@@ -83,20 +98,25 @@ timelineState timeline::update() {
         if (m.getAddress() == "/return/json/get")
             setFromJson(ofJson::parse(m.getArgAsString(0)));
 
+        if (m.getAddress() == "/play") play();
+        if (m.getAddress() == "/stop") stop();
+        if (m.getAddress() == "/seek") setPositionByMillis(m.getArgAsInt(0));
+        if (m.getAddress() == "/pause") setPause(m.getArgAsBool(0));
+
     }
 
-    timelineState ret = STATE_IDLE;
+    currentState = STATE_IDLE;
 
     if (isPlay)
     {
         if (paused)
         {
-            ret = STATE_PAUSE;
+            currentState = STATE_PAUSE;
             started = ofGetElapsedTimeMillis() - passed;
         }
         else
         {
-            ret = STATE_PLAYING;
+            currentState = STATE_PLAYING;
             passed = ofGetElapsedTimeMillis() - started;
         }
 
@@ -105,14 +125,14 @@ timelineState timeline::update() {
             sendOsc();
             if (getIsLoop()) play();
             else stop();
-            ret = STATE_FINISHED;
+            currentState = STATE_FINISHED;
         }
     }
 
     sendOsc();
 
-    for (auto & tr : getTracks()) tr->update(ret, getPassed());
-    return ret;
+    for (auto & tr : getTracks()) tr->update(currentState, getPassed());
+    return currentState;
 }
 
 void timeline::sendOsc()
@@ -182,12 +202,17 @@ void timeline::play()
     started = ofGetElapsedTimeMillis();
     isPlay = true;
     setPause(false);
+
+    ofNotifyEvent(ev_play, getTimelineEvArg());
 }
 
 void timeline::stop()
 {
     isPlay = false;
     passed = 0;
+
+    ofNotifyEvent(ev_stop, getTimelineEvArg());
+
 }
 
 void timeline::setPosition(float position)
@@ -200,6 +225,8 @@ void timeline::setPositionByMillis(uint64_t time)
     passed = time;
     play();
     setPause(true);
+
+    ofNotifyEvent(ev_seek, getTimelineEvArg());
 }
 
 void timeline::togglePause()
@@ -210,6 +237,15 @@ void timeline::togglePause()
 void timeline::setPause(bool b)
 {
     paused = b;
+
+    ofNotifyEvent(ev_pause, getTimelineEvArg());
+}
+
+timelineEvent & timeline::getTimelineEvArg()
+{
+    eventArg.time = getPassed();
+    eventArg.paused = paused;
+    return eventArg;
 }
 
 ofPtr<trackBase> timeline::addTrack(string name, trackType tp, bool newTrack)

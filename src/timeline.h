@@ -4,6 +4,8 @@
 #include "./motorTrack.h"
 #include "ofxOsc.h"
 
+class timelineSyncBase;
+
 class chapter {
 public:
     string                      name = "chapter";
@@ -17,11 +19,18 @@ public:
     void load(string path);
     void save(string path);
     void clear(bool completely = false);
+    void drawMinimum(int x, int y);
 
     void setFromJson(ofJson data);
     ofJson getJsonData();
 
     // タイムラインの再生・シーク
+    timelineEvent & getTimelineEvArg();
+    timelineEvent eventArg;
+    ofEvent<timelineEvent> ev_play;
+    ofEvent<timelineEvent> ev_stop;
+    ofEvent<timelineEvent> ev_pause;
+    ofEvent<timelineEvent> ev_seek;
     void play();
     void stop();
     void setPositionByMillis(uint64_t time);
@@ -43,7 +52,7 @@ public:
     void sendOsc();
 
     void setup();
-    timelineState update();
+    timelineState const & update();
     void draw();
 
     vector<string> json_piece;
@@ -124,6 +133,7 @@ public:
 
 protected:
 
+    timelineState currentState;
     ofxOscSender sender;
     ofxOscReceiver receiver;
     string sendAddr = "localhost";

@@ -228,13 +228,13 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
     {
         motorTrack* trPtr = (motorTrack*)tr.get();
         ImGui::InputInt("ID", &trPtr->motorIndex);
+        ImGui::InputFloat("Deg/Step", &trPtr->stepDeg, 0.01);
         if (ImGui::Button("Standby"))
         {
             trPtr->motorStandby(tm->getPassed());
         }
         ImGui::SameLine();
         ImGui::Checkbox("Drive", &trPtr->doDrive);
-        ImGui::InputFloat("Deg/Step", &trPtr->stepDeg, 0.01);
     }
 
     char val[1024] = {0};

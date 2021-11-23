@@ -7,3 +7,8 @@ enum timelineState {
     STATE_PAUSE,
     STATE_FINISHED,
 };
+
+struct timelineEvent{
+    uint64_t time = 0;
+    bool paused = false;
+};
