@@ -78,11 +78,15 @@ timelineState const & timeline::update() {
             setFromJson(ofJson::parse(d));
         }
 
+        if (m.getAddress() == "/json/save")
+        {
+            save(m.getArgAsString(0));
+        }
+
         // ip-Syncモードで送るsyncシグナル
         // 現在時刻その他の情報を返す
         if (m.getAddress() == "/sync")
-        {
-            ofxOscSender repSender;
+        {            ofxOscSender repSender;
             ofxOscMessage reply;
             repSender.setup(m.getRemoteHost(), sendPort);
             reply.setAddress("/return/sync");
@@ -93,6 +97,7 @@ timelineState const & timeline::update() {
         if (m.getAddress() == "/json/get")
         {
             sendSyncJsonData(m.getRemoteHost(), m.getArgAsInt(0));
+            cout << "Send to :" << m.getRemoteHost() << "::" << m.getArgAsInt(0) << endl;
         } 
 
         if (m.getAddress() == "/return/json/get")
@@ -100,7 +105,7 @@ timelineState const & timeline::update() {
 
         if (m.getAddress() == "/play") play();
         if (m.getAddress() == "/stop") stop();
-        if (m.getAddress() == "/seek") setPositionByMillis(m.getArgAsInt(0));
+        if (m.getAddress() == "/seek") setPositionByMillis(m.getArgAsInt64(0));
         if (m.getAddress() == "/pause") setPause(m.getArgAsBool(0));
 
     }
@@ -295,7 +300,7 @@ void timeline::setFromJson(ofJson j)
         clear(false);
         return;
     }
-    
+
     clear(true);
     ofJson j_tm = j["timeline"];
 

@@ -774,6 +774,17 @@ void timelineViewer::drawGui()
         m.addIntArg(tm->getReceiverPort());
         sender.setup(tm->getSendAddr(), tm->getSendPort());
         sender.sendMessage(m);
+        cout << "Get request to " << tm->getSendAddr() << "::" << tm->getSendPort() << endl;
+    }
+
+    if (ImGui::Button("Save - main.json"))
+    {
+        ofxOscSender sender;
+        ofxOscMessage m;
+        m.setAddress("/json/save");
+        m.addStringArg("main.json");
+        sender.setup(tm->getSendAddr(), tm->getSendPort());
+        sender.sendMessage(m);
     }
     ImGui::End();
 
