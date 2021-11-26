@@ -110,6 +110,7 @@ timelineState const & timeline::update() {
 
     }
 
+    timelineState prev = currentState;
     currentState = STATE_IDLE;
 
     if (isPlay)
@@ -122,6 +123,7 @@ timelineState const & timeline::update() {
         else
         {
             currentState = STATE_PLAYING;
+            if (prev == STATE_FINISHED) currentState = STATE_LOOPBACK;
             passed = ofGetElapsedTimeMillis() - started;
         }
 
@@ -405,8 +407,9 @@ ofJson timeline::getJsonData()
     for (auto & c : chapters)
     {
         ofJson chj;
-        chj["duration"] = getDuration();
-        chj["isLoop"] = getIsLoop();
+        chj["duration"] = c->duration;
+        chj["isLoop"] = c->isLoop;
+        chj["chapterName"] = c->name;
 
         for (auto & t : c->tracks) chj["tracks"].push_back(t->getJsonData());
         j_tm.push_back(chj);

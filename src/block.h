@@ -9,6 +9,7 @@ enum complementType {
     CMPL_QUAD,
     CMPL_CUBIC,
     CMPL_RAMP,
+    CMPL_EXPO,
 };
 
 class block {
@@ -91,6 +92,7 @@ public:
         if (cmplType == CMPL_CUBIC)    x = getCubic(pos, easeOpt);
         if (cmplType == CMPL_QUAD)     x = getQuad(pos, easeOpt);
         if (cmplType == CMPL_RAMP)     x = getRampControl(pos, length);
+        if (cmplType == CMPL_EXPO)     x = getExpo(pos, easeOpt);
 
         return ofMap(x, 0, 1, getFrom(), getTo(), true);
     }
@@ -100,6 +102,7 @@ public:
     float getSin(float x, uint8_t easeOption);
     float getQuad(float x, uint8_t easeOption);
     float getCubic(float x, uint8_t easeOption);
+    float getExpo(float x, uint8_t easeOption);
 
     float getPow(float x, uint8_t easeOption, int numPow);
     float getRampControl(float x, uint64_t const & length);

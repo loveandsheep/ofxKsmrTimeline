@@ -37,6 +37,13 @@ float block::getPow(float x, uint8_t easeOption, int numPow)
     return 0.0f;
 }
 
+float block::getExpo(float x, uint8_t easeOption)
+{
+    if (easeOption == EASE_INOUT)   return x == 0 ? 0 : x == 1 ? 1 : x < 0.5 ? pow(2, 20 * x - 10) / 2 : (2 - pow(2, -20 * x + 10)) / 2;
+    if (easeOption == EASE_IN)      return x == 0 ? 0 : pow(2, 10 * x - 10);
+    if (easeOption == EASE_OUT)     return x == 1 ? 1 : 1 - pow(2, -10 * x);
+}
+
 float block::getRampControl(float x, uint64_t const & length)
 {
     // from -> toまでを時間　lengthで変化していく

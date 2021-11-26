@@ -1090,7 +1090,7 @@ void timelineViewer::drawParameterGui(ofPtr<block> & b, ofPtr<param> & p)
     //===========================================共通フッター
 
     //ENUMのcomplementTypeと揃える
-    const char* items[] = {"Linear", "Const", "Sin", "Quad", "Cubic", "MotorRamp"};
+    const char* items[] = {"Linear", "Const", "Sin", "Quad", "Cubic", "MotorRamp", "Expo"};
     gui_curveSelect = int(b->getComplement());
 
     bool easeEnable = false;
@@ -1105,6 +1105,7 @@ void timelineViewer::drawParameterGui(ofPtr<block> & b, ofPtr<param> & p)
     easeEnable |= (gui_curveSelect == CMPL_SIN);
     easeEnable |= (gui_curveSelect == CMPL_QUAD);
     easeEnable |= (gui_curveSelect == CMPL_CUBIC);
+    easeEnable |= (gui_curveSelect == CMPL_EXPO);
 
     //カーブがイーズ有効の時はイーズをラジオと同期
     if (easeEnable)
