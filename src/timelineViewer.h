@@ -130,6 +130,8 @@ protected:
     char gui_textInput[numEventText] = {0};
     static const int numTrackText = 64;
     char gui_trackInput[numTrackText] = {0};
+    static const int numBlockLabel = 64;
+    char gui_blockLabelInput[numBlockLabel] = {0};
     static const int numOscAddrText = 64;
     static const int numChapterName = 64;
     char gui_chapterName[numChapterName] = {0};

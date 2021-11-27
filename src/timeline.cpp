@@ -372,6 +372,7 @@ void timeline::setFromJson(ofJson j)
                             b->setComplement(complementType(j_br["cmplType"].get<int>()));
                             b->easeInFlag = j_br["easeIn"].get<bool>();
                             b->easeOutFlag = j_br["easeOut"].get<bool>();
+                            if (!j_br["label"].empty()) b->label = j_br["label"].get<string>();
                             if (!j_br["accel"].empty()) b->accel = j_br["accel"].get<float>();
                             if (!j_br["decel"].empty()) b->decel = j_br["decel"].get<float>();
                         }
@@ -407,6 +408,7 @@ ofJson timeline::getJsonData()
     for (auto & c : chapters)
     {
         ofJson chj;
+        cout << "Duration :" << c->name << "::" << c->duration << endl;
         chj["duration"] = c->duration;
         chj["isLoop"] = c->isLoop;
         chj["chapterName"] = c->name;

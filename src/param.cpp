@@ -12,6 +12,17 @@ void param::setType(paramType tp)
     if (tp == PTYPE_JSONSTREAM) numUsingBlockLine = 1;
 }
 
+int param::getBlockIndexByLabel(string const & label)
+{
+    int index = 0;
+    for (int i = 0;i < keyPoints.size();i++)
+    {
+        if (blocks[0][i]->label == label) index = i;
+    }
+
+    return index;
+}
+
 int param::getBlockIndexByTime(uint64_t millis)
 {
     int index = 0;
@@ -20,6 +31,11 @@ int param::getBlockIndexByTime(uint64_t millis)
         if (keyPoints[i] <= millis) index = i;
     }
     return index;
+}
+
+vector<ofPtr<block> > param::pickBlocksByLabel(string const & label)
+{
+    return pickBlocks(getBlockIndexByLabel(label));
 }
 
 vector<ofPtr<block> > param::pickBlocksByTime(uint64_t millis)

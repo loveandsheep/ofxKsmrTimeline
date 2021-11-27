@@ -65,6 +65,7 @@ public:
     ofJson getJsonData() {
         ofJson j;
         j["inherit"] = Inherit;
+        j["label"] = label;
         j["keep"] = keep;
         j["from"] = from;
         j["to"] = to;
@@ -115,6 +116,7 @@ public:
     bool easeOutFlag = false;
 
     string eventName = "newEvent";
+    string label = "";
 
     //台形駆動
     float accel = 0.25;

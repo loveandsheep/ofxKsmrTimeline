@@ -6,6 +6,7 @@ enum timelineState {
     STATE_PLAYING,
     STATE_PAUSE,
     STATE_FINISHED,
+    STATE_LOOPBACK,
 };
 
 struct timelineEvent{
