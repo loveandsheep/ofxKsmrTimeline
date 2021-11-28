@@ -1,5 +1,10 @@
 #include "track.h"
+
+// #define MODBUS
+
+#ifdef MODBUS
 #include "ofxModbusMotorDriver.h"
+#endif
 
 class motorTrack : public trackBase {
 public:
@@ -27,8 +32,10 @@ public:
         auto p = getParamsRef()[0];
         int  index = p->getBlockIndexByTime(passed);
         auto b = p->pickBlocksByTime(passed)[0];
+#ifdef MODBUS
         ofxModbusMotorDriver::instance().goAbs(motorIndex, b->getTo() / stepDeg,
             30 / stepDeg, 1000 / stepDeg,1000 / stepDeg);
+#endif
     }
 
     virtual void update(timelineState state, uint64_t passed)
@@ -54,10 +61,12 @@ public:
 
                     if (drive)
                     {
+#ifdef MODBUS
                         ofxModbusMotorDriver::instance().goAbs(motorIndex, b->getTo() / stepDeg,
                             b->speed_max * 1000 / stepDeg,
                             b->accel * 1000 / stepDeg,
                             b->decel * 1000 / stepDeg);
+#endif
                     }
 
                 }
