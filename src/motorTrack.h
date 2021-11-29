@@ -31,13 +31,15 @@ public:
             30 / stepDeg, 1000 / stepDeg,1000 / stepDeg);
     }
 
-    virtual void update(timelineState state, uint64_t passed)
+    virtual void update(timelineState state, uint64_t const & passed, uint64_t const & duration)
     {
         if (state == STATE_PLAYING)
         {
-            auto p = getParamsRef()[0];
-            int  index = p->getBlockIndexByTime(passed);
-            auto b = p->pickBlocksByTime(passed)[0];
+            auto p      = getParamsRef()[0];
+            int  index  = p->getBlockIndexByTime(passed);
+            auto b      = p->pickBlocksByTime(passed)[0];
+
+            p->getBlockValue(0, passed, duration);
             
             if (lastBlock != index)
             {

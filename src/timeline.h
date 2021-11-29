@@ -40,8 +40,8 @@ public:
     void setPause(bool b);
 
     //ゲッター
-    uint64_t getPassed(){return passed;}
-    uint64_t getDuration(){return getCurrentChapter()->duration;}
+    uint64_t const & getPassed(){return passed;}
+    uint64_t const & getDuration(){return getCurrentChapter()->duration;}
     bool getPaused(){return paused;}
     bool getIsPlay(){return isPlay;}
     bool getIsLoop(){return getCurrentChapter()->isLoop;}

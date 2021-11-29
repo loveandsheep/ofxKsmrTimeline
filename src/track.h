@@ -23,7 +23,7 @@ enum trackType {
 class trackBase {
 public:
     virtual void setup(string name, trackType type, bool newTrack);
-    virtual void update(timelineState state, uint64_t passed){};
+    virtual void update(timelineState state, uint64_t const & passed, uint64_t const & duration){};
     
     //
 
