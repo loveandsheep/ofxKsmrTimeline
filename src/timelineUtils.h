@@ -8,7 +8,8 @@ enum timelineState {
     STATE_FINISHED,
 };
 
-struct timelineEvent{
+struct timelineEventArgs{
     uint64_t time = 0;
+    int chapterIndex = 0;
     bool paused = false;
 };

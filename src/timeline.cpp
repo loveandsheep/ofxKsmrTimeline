@@ -103,10 +103,11 @@ timelineState const & timeline::update() {
         if (m.getAddress() == "/return/json/get")
             setFromJson(ofJson::parse(m.getArgAsString(0)));
 
-        if (m.getAddress() == "/play") play();
-        if (m.getAddress() == "/stop") stop();
-        if (m.getAddress() == "/seek") setPositionByMillis(m.getArgAsInt64(0));
-        if (m.getAddress() == "/pause") setPause(m.getArgAsBool(0));
+        if (m.getAddress() == "/play")      play();
+        if (m.getAddress() == "/stop")      stop();
+        if (m.getAddress() == "/seek")      setPositionByMillis(m.getArgAsInt64(0));
+        if (m.getAddress() == "/pause")     setPause(m.getArgAsBool(0));
+        if (m.getAddress() == "/chapter")   setChapter(m.getArgAsInt(0));
 
     }
 
@@ -246,10 +247,11 @@ void timeline::setPause(bool b)
     ofNotifyEvent(ev_pause, getTimelineEvArg());
 }
 
-timelineEvent & timeline::getTimelineEvArg()
+timelineEventArgs & timeline::getTimelineEvArg()
 {
     eventArg.time = getPassed();
     eventArg.paused = paused;
+    eventArg.chapterIndex = currentChapterIndex;
     return eventArg;
 }
 
@@ -502,6 +504,7 @@ void timeline::setChapter(int index)
 {
     if (index < 0 || chapters.size() <= index) return;
     currentChapterIndex = index;
+    ofNotifyEvent(ev_chapter, getTimelineEvArg());
 }
 
 void timeline::removeChapter(int index)

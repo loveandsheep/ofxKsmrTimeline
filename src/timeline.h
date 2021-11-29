@@ -25,12 +25,13 @@ public:
     ofJson getJsonData();
 
     // タイムラインの再生・シーク
-    timelineEvent & getTimelineEvArg();
-    timelineEvent eventArg;
-    ofEvent<timelineEvent> ev_play;
-    ofEvent<timelineEvent> ev_stop;
-    ofEvent<timelineEvent> ev_pause;
-    ofEvent<timelineEvent> ev_seek;
+    timelineEventArgs & getTimelineEvArg();
+    timelineEventArgs eventArg;
+    ofEvent<timelineEventArgs> ev_play;
+    ofEvent<timelineEventArgs> ev_stop;
+    ofEvent<timelineEventArgs> ev_pause;
+    ofEvent<timelineEventArgs> ev_seek;
+    ofEvent<timelineEventArgs> ev_chapter;
     void play();
     void stop();
     void setPositionByMillis(uint64_t time);
