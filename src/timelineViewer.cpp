@@ -366,6 +366,11 @@ float timelineViewer::drawParam(ofPtr<param> pr, ofRectangle area, uint64_t begi
                 ofSetColor(0, 0, 0, 70);
                 ofDrawRectangle(hb - area.getPosition());
             }
+            if (bl[i]->label.length() > 0)
+            {
+                ofSetColor(0, 150, 50, 70);
+                ofDrawRectangle(hb - area.getPosition());
+            }
 
 
             if (hb.inside(ofGetMouseX(), ofGetMouseY())) hoverBlock = bl[i];
@@ -1090,7 +1095,7 @@ void timelineViewer::drawParameterGui(ofPtr<block> & b, ofPtr<param> & p)
     //===========================================共通フッター
 
     //ENUMのcomplementTypeと揃える
-    const char* items[] = {"Linear", "Const", "Sin", "Quad", "Cubic", "MotorRamp"};
+    const char* items[] = {"Linear", "Const", "Sin", "Quad", "Cubic", "MotorRamp", "Expo"};
     gui_curveSelect = int(b->getComplement());
 
     bool easeEnable = false;
@@ -1105,6 +1110,7 @@ void timelineViewer::drawParameterGui(ofPtr<block> & b, ofPtr<param> & p)
     easeEnable |= (gui_curveSelect == CMPL_SIN);
     easeEnable |= (gui_curveSelect == CMPL_QUAD);
     easeEnable |= (gui_curveSelect == CMPL_CUBIC);
+    easeEnable |= (gui_curveSelect == CMPL_EXPO);
 
     //カーブがイーズ有効の時はイーズをラジオと同期
     if (easeEnable)
@@ -1135,6 +1141,11 @@ void timelineViewer::drawParameterGui(ofPtr<block> & b, ofPtr<param> & p)
         ImGui::Text(sp.c_str());
     }
 
+    strcpy(gui_blockLabelInput, bs[0]->label.substr(0, numBlockLabel).c_str());
+    if (ImGui::InputText("Label", gui_blockLabelInput, numBlockLabel))
+    {
+        for (int i = 0;i < bs.size();i++) bs[i]->label = string(gui_blockLabelInput);
+    }
 }
 
 void timelineViewer::removeTrack(ofPtr<trackBase> const & tr)

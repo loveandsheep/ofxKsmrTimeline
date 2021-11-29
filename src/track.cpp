@@ -62,6 +62,7 @@ ofPtr<param> trackBase::getParam(int index)
 void trackBase::setJsonData(ofJson j){
     oscSend = j["oscSend"].get<bool>();
     view_height = j["view_height"].get<float>();
+    if (!j["fold"].empty()) fold = j["fold"].get<bool>();
 }
 
 ofJson trackBase::getJsonData(){
@@ -70,6 +71,7 @@ ofJson trackBase::getJsonData(){
     j["name"] = myName;
     j["type"] = int(myType);
     j["oscSend"] = oscSend;
+    j["fold"] = fold;
 
     for (auto & p : params)
         j["params"].push_back(p->getJsonData());
