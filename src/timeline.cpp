@@ -136,7 +136,7 @@ timelineState const & timeline::update() {
 
     sendOsc();
 
-    for (auto & tr : getTracks()) tr->update(currentState, getPassed());
+    for (auto & tr : getTracks()) tr->update(currentState, getPassed(), getDuration());
     return currentState;
 }
 
