@@ -273,6 +273,38 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
             if (ImGui::Button("Standby"))
             {
                 trPtr->motorStandby(tm->getPassed());
+                ofxOscMessage mes;
+                mes.setAddress("/track/standby");
+                mes.addStringArg(tr->getName());
+                tm->getSender().sendMessage(mes);
+            }ImGui::SameLine();
+            if (ImGui::Button("Preset"))
+            {
+                ofxOscMessage mes;
+                mes.setAddress("/track/preset");
+                mes.addStringArg(tr->getName());
+                tm->getSender().sendMessage(mes);
+            }
+            if (ImGui::Button(" - "))
+            {
+                ofxOscMessage mes;
+                mes.setAddress("/track/jog/fw");
+                mes.addStringArg(tr->getName());
+                tm->getSender().sendMessage(mes);
+            }ImGui::SameLine();
+            if (ImGui::Button("STOP"))
+            {
+                ofxOscMessage mes;
+                mes.setAddress("/track/jog/stop");
+                mes.addStringArg(tr->getName());
+                tm->getSender().sendMessage(mes);
+            }ImGui::SameLine();
+            if (ImGui::Button(" + "))
+            {
+                ofxOscMessage mes;
+                mes.setAddress("/track/jog/rv");
+                mes.addStringArg(tr->getName());
+                tm->getSender().sendMessage(mes);
             }
             ImGui::SameLine();
             ImGui::Checkbox("Drive", &trPtr->doDrive);
@@ -779,8 +811,9 @@ void timelineViewer::drawGui()
         m.addIntArg(tm->getReceiverPort());
         sender.setup(tm->getSendAddr(), tm->getSendPort());
         sender.sendMessage(m);
-        cout << "Get request to " << tm->getSendAddr() << "::" << tm->getSendPort() << endl;
+        cout << "Get request to " << tm->getSendAddr() << "::" << tm->getReceiverPort() << endl;
     }
+    ImGui::Text(("Receive port :" + ofToString(tm->getReceiverPort())).c_str());
 
     if (ImGui::Button("Save - main.json"))
     {
