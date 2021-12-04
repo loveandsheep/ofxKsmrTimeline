@@ -147,6 +147,9 @@ protected:
     ofFloatColor guiColor_from;
     ofFloatColor guiColor_to;
 
+    bool autoBackup = true;
+    int backupInterval = 10;
+    uint64_t backupTimer = 0;
     int snaped = -1;
 
         std::wstring utf8_to_wide_winapi(std::string const& src)

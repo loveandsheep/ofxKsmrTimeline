@@ -140,8 +140,8 @@ int param::addKeyPoint(uint64_t const & time)
     for (int i = 0;i < numUsingBlockLine;i++)
     {
         ofPtr<block> nb = make_shared<block>();
-        nb->setFrom(0.5);
-        nb->setTo(0.5);
+        nb->setFrom(0.0);
+        nb->setTo(0.0);
         if (i == 3) 
         {
             nb->setFrom(1);
@@ -166,7 +166,7 @@ void param::setKeyPoint(ofPtr<block> const & bl, int const & targetTime)
             }
         }
     }
-
+    edited = true;
     refleshInherit();
 }
 
@@ -196,6 +196,7 @@ int param::moveKeyPoint(ofPtr<block> const & bl , int const & targetTime, vector
         }
     }
 
+    edited = true;
     refleshInherit();
 
     return ret;
@@ -212,7 +213,7 @@ void param::clearKeyPoints()
         }
     }
     while (keyPoints.size() > 0) keyPoints.erase(keyPoints.begin());
-
+    edited = true;
     refleshInherit();
 }
 
@@ -238,7 +239,7 @@ void param::removeKeyPoint(ofPtr<block> const & bl)
             blocks[j].erase(blocks[j].begin() + removeIndex);
         }
     }
-    
+    edited = true;
     refleshInherit();
 }
 
@@ -382,4 +383,21 @@ ofJson param::getJsonData()
     }
 
     return j;
+}
+
+bool param::checkEdited()
+{
+    bool ret = edited;
+
+    for (int o = 0;o < numUsingBlockLine;o++)
+    {
+        for (auto & b : blocks[o])
+        {
+            ret |= b->edited;
+            b->edited = false;
+        }
+    }
+
+    edited = false;
+    return ret;
 }

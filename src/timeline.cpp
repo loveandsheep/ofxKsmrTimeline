@@ -148,7 +148,11 @@ timelineState const & timeline::update() {
 
     sendOsc();
 
-    for (auto & tr : getTracks()) tr->update(currentState, getPassed(), getDuration());
+    for (auto & tr : getTracks()) 
+    {
+        tr->update(currentState, getPassed(), getDuration());
+        edited |= tr->checkEdited();
+    }
     return currentState;
 }
 

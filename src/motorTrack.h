@@ -7,6 +7,7 @@ public:
     int lastBlock = -1;
     float stepDeg = 0.018;
     bool doDrive = true;
+    bool spin = false;
     
     virtual void setup(string name, trackType type, bool newTrack)
     {
@@ -76,13 +77,26 @@ public:
                     
                     if (b->getKeep()) drive = false;
                     if (!doDrive) drive = false;
+                    if (!spin && b->getComplement() != CMPL_RAMP) drive = false;
+                    if (spin && b->getComplement() != CMPL_LINEAR) drive = false;
 
                     if (drive)
                     {
-                        ofxModbusMotorDriver::instance().goAbs(motorIndex, b->getTo() / stepDeg,
-                            b->speed_max * 1000 / stepDeg,
-                            b->accel * 1000 / stepDeg,
-                            b->decel * 1000 / stepDeg);
+                        if (spin)
+                        {
+                            float acc = abs(b->getTo() - b->getFrom()) / (b->getLength() / 1000.0);
+                            ofxModbusMotorDriver::instance().run(
+                                motorIndex, b->getTo() / stepDeg, 
+                                acc / stepDeg, acc / stepDeg, 500
+                                );
+                        }
+                        else
+                        {
+                            ofxModbusMotorDriver::instance().goAbs(motorIndex, b->getTo() / stepDeg,
+                                b->speed_max * 1000 / stepDeg,
+                                b->accel * 1000 / stepDeg,
+                                b->decel * 1000 / stepDeg);
+                        }
                     }
 
                 }

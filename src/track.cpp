@@ -78,3 +78,13 @@ ofJson trackBase::getJsonData(){
 
     return j;
 }
+
+bool trackBase::checkEdited(){
+    bool ret = edited;
+    edited = false;
+    for (auto & p : params)
+    {
+        ret |= p->checkEdited();
+    }
+    return ret;
+}

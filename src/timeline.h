@@ -132,6 +132,7 @@ public:
     void removeChapter(int index);
     void clearChapter(bool completely = false);
 
+    bool edited = false;
 protected:
 
     timelineState currentState;
