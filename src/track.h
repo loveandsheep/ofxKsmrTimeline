@@ -2,6 +2,7 @@
 #include "ofMain.h"
 #include "./param.h"
 #include "./jsonParam.h"
+#include "ofxOsc.h"
 
 enum trackType {
     TRACK_FLOAT,
@@ -24,7 +25,7 @@ class trackBase {
 public:
     virtual void setup(string name, trackType type, bool newTrack);
     virtual void update(timelineState state, uint64_t const & passed, uint64_t const & duration){};
-    
+    virtual void controlMessage(ofxOscMessage & m, uint64_t passed, uint64_t duration){};
     //
 
     //
