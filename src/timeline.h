@@ -140,8 +140,8 @@ protected:
     ofxOscReceiver receiver;
     string sendAddr = "localhost";
     uint64_t seekOscCheck = 0;
-    int sendPort = 12400;
-    int recvPort = 12500;
+    int sendPort = 7000;
+    int recvPort = 7000;
 
     //チャプタープロパティ
     int currentChapterIndex = 0;

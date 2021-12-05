@@ -85,10 +85,10 @@ public:
                         if (spin)
                         {
                             float acc = abs(b->getTo() - b->getFrom()) / (b->getLength() / 1000.0);
+
                             ofxModbusMotorDriver::instance().run(
                                 motorIndex, b->getTo() / stepDeg, 
-                                acc / stepDeg, acc / stepDeg, 500
-                                );
+                                acc / stepDeg, acc / stepDeg, 500);
                         }
                         else
                         {
