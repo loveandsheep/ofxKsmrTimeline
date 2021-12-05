@@ -55,6 +55,12 @@ public:
         }
     }
 
+    void resetAlarm()
+    {
+        ofxModbusMotorDriver::instance().setRemote(motorIndex, RIO_ALM_RST, true);
+        ofxModbusMotorDriver::instance().setRemote(motorIndex, RIO_ALM_RST, false);
+    }
+
     virtual void update(timelineState state, uint64_t const & passed, uint64_t const & duration)
     {
         if (state == STATE_PLAYING)
