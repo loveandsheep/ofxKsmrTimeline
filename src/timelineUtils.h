@@ -9,7 +9,8 @@ enum timelineState {
     STATE_LOOPBACK,
 };
 
-struct timelineEvent{
+struct timelineEventArgs{
     uint64_t time = 0;
+    int chapterIndex = 0;
     bool paused = false;
 };

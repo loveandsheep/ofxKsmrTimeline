@@ -2,6 +2,7 @@
 #include "ofMain.h"
 #include "./param.h"
 #include "./jsonParam.h"
+#include "ofxOsc.h"
 
 enum trackType {
     TRACK_FLOAT,
@@ -23,8 +24,8 @@ enum trackType {
 class trackBase {
 public:
     virtual void setup(string name, trackType type, bool newTrack);
-    virtual void update(timelineState state, uint64_t passed){};
-    
+    virtual void update(timelineState state, uint64_t const & passed, uint64_t const & duration){};
+    virtual void controlMessage(ofxOscMessage & m, uint64_t passed, uint64_t duration){};
     //
 
     //
@@ -46,6 +47,8 @@ public:
     static const int NUM_ORIGIN = 32;
     int eventCallOrigin[NUM_ORIGIN] = {0};
 
+    bool checkEdited();
+    bool edited = false;
 protected:
     string uniqueName;//起動中に使う、変更しても終了まで変更しない名前。主にGUIのIDとして使う
     string myName;

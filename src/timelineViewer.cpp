@@ -21,6 +21,12 @@ void timelineViewer::update() {
 }
 
 void timelineViewer::draw(ofRectangle area) {
+    if (ofGetElapsedTimeMillis() - backupTimer > backupInterval * 1000)
+    {
+        backupTimer = ofGetElapsedTimeMillis();
+        ofSavePrettyJson("backup.json", tm->getJsonData());
+    }
+
     ofPushStyle();
     ofPushMatrix();
     
@@ -264,21 +270,54 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
         {
             tr->setName(string(gui_trackInput));
         }
+        ImGui::Text(val);
 
         if (tr->getType() == TRACK_MOTOR)
         {
             motorTrack* trPtr = (motorTrack*)tr.get();
-            ImGui::InputInt("ID", &trPtr->motorIndex);
-            ImGui::InputFloat("Deg/Step", &trPtr->stepDeg, 0.01);
+            if (ImGui::InputInt("ID", &trPtr->motorIndex)) trPtr->edited = true;
+            if (ImGui::InputFloat("Deg/Step", &trPtr->stepDeg, 0.01)) trPtr->edited = true;
             if (ImGui::Button("Standby"))
             {
                 trPtr->motorStandby(tm->getPassed());
+                ofxOscMessage mes;
+                mes.setAddress("/track/standby");
+                mes.addStringArg(tr->getName());
+                tm->getSender().sendMessage(mes);
+            }ImGui::SameLine();
+            if (ImGui::Button("Preset"))
+            {
+                ofxOscMessage mes;
+                mes.setAddress("/track/preset");
+                mes.addStringArg(tr->getName());
+                tm->getSender().sendMessage(mes);
+            }
+            if (ImGui::Button(" - "))
+            {
+                ofxOscMessage mes;
+                mes.setAddress("/track/jog/fw");
+                mes.addStringArg(tr->getName());
+                tm->getSender().sendMessage(mes);
+            }ImGui::SameLine();
+            if (ImGui::Button("STOP"))
+            {
+                ofxOscMessage mes;
+                mes.setAddress("/track/jog/stop");
+                mes.addStringArg(tr->getName());
+                tm->getSender().sendMessage(mes);
+            }ImGui::SameLine();
+            if (ImGui::Button(" + "))
+            {
+                ofxOscMessage mes;
+                mes.setAddress("/track/jog/rv");
+                mes.addStringArg(tr->getName());
+                tm->getSender().sendMessage(mes);
             }
             ImGui::SameLine();
-            ImGui::Checkbox("Drive", &trPtr->doDrive);
+            if (ImGui::Checkbox("Drive", &trPtr->doDrive)) trPtr->edited = true;
+            if (ImGui::Checkbox("Spin", &trPtr->spin)) trPtr->edited = true;
         }
 
-        ImGui::Text(val);
     }
     
 
@@ -763,26 +802,32 @@ void timelineViewer::drawGui()
     {
         for (auto & t : tm->getTracks()) t->fold = true;
     }
-    if (ImGui::Button("Sync")) gui_syncWindow ^= true;
-    ImGui::Begin("Sync panel", &gui_syncWindow);
 
-    if (ImGui::Button("Send"))
+    ImGui::SameLine();
+    if (ImGui::Button("UnFold")) for (auto & t : tm->getTracks()) t->fold = false;
+    
+    ImGui::Text("===Sync===");
+    ImGui::PushStyleColor(ImGuiCol_Button, ofFloatColor::fromHsb(tm->edited ? 0.1 : 0.4, 0.5, 0.5));
+    if (ImGui::Button("Sync data")) 
     {
         tm->sendSyncJsonData();
+        tm->edited = false;
     }
+    ImGui::PopStyleColor();
     ImGui::SameLine();
-    if (ImGui::Button("Get"))
+    if (ImGui::Button("Get data"))
     {
+        tm->edited = false;
         ofxOscSender sender;
         ofxOscMessage m;
         m.setAddress("/json/get");
         m.addIntArg(tm->getReceiverPort());
         sender.setup(tm->getSendAddr(), tm->getSendPort());
         sender.sendMessage(m);
-        cout << "Get request to " << tm->getSendAddr() << "::" << tm->getSendPort() << endl;
+        cout << "Get request to " << tm->getSendAddr() << "::" << tm->getReceiverPort() << endl;
     }
 
-    if (ImGui::Button("Save - main.json"))
+    if (ImGui::Button("Save remote as main.json"))
     {
         ofxOscSender sender;
         ofxOscMessage m;
@@ -791,8 +836,16 @@ void timelineViewer::drawGui()
         sender.setup(tm->getSendAddr(), tm->getSendPort());
         sender.sendMessage(m);
     }
-    ImGui::End();
-
+    if (ImGui::Button("Standby All"))
+    {
+        for (auto & tr : tm->getTracks())
+        {
+            ofxOscMessage mes;
+            mes.setAddress("/track/standby");
+            mes.addStringArg(tr->getName());
+            tm->getSender().sendMessage(mes);
+        }
+    }
 
     ImGui::Text("=== Add Track ===");
     if (ImGui::Button("Float")) createNewTrack("float", TRACK_FLOAT);
@@ -870,6 +923,8 @@ void timelineViewer::drawGui()
             tm->save(result.getPath());
         }
     }
+    ImGui::Checkbox("AutoBackup", &autoBackup);
+    ImGui::DragInt("BackupInterval[sec]", &backupInterval, 1, 10, 300);
 
     string ts[] = {":", ".", " "};
     int tmax[] = {99 , 59 , 99};

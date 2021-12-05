@@ -168,7 +168,7 @@ void param::setKeyPoint(ofPtr<block> const & bl, int const & targetTime)
             }
         }
     }
-
+    edited = true;
     refleshInherit();
 }
 
@@ -198,6 +198,7 @@ int param::moveKeyPoint(ofPtr<block> const & bl , int const & targetTime, vector
         }
     }
 
+    edited = true;
     refleshInherit();
 
     return ret;
@@ -214,7 +215,7 @@ void param::clearKeyPoints()
         }
     }
     while (keyPoints.size() > 0) keyPoints.erase(keyPoints.begin());
-
+    edited = true;
     refleshInherit();
 }
 
@@ -240,7 +241,7 @@ void param::removeKeyPoint(ofPtr<block> const & bl)
             blocks[j].erase(blocks[j].begin() + removeIndex);
         }
     }
-    
+    edited = true;
     refleshInherit();
 }
 
@@ -384,4 +385,21 @@ ofJson param::getJsonData()
     }
 
     return j;
+}
+
+bool param::checkEdited()
+{
+    bool ret = edited;
+
+    for (int o = 0;o < numUsingBlockLine;o++)
+    {
+        for (auto & b : blocks[o])
+        {
+            ret |= b->edited;
+            b->edited = false;
+        }
+    }
+
+    edited = false;
+    return ret;
 }

@@ -13,12 +13,14 @@ public:
         ofAddListener(master->ev_stop, this, &timelineSyncBase::stopMaster);
         ofAddListener(master->ev_pause, this, &timelineSyncBase::pauseMaster);
         ofAddListener(master->ev_seek, this, &timelineSyncBase::positionMaster);
+        ofAddListener(master->ev_chapter, this, &timelineSyncBase::chapterMaster);
     }
 
-    void playMaster(timelineEvent & arg){ play(true); }
-    void stopMaster(timelineEvent & arg){ stop(true); }
-    void pauseMaster(timelineEvent & arg){ setPause(arg.paused, true); }
-    void positionMaster(timelineEvent & arg){ setPosition(arg.time, true); }
+    void playMaster(timelineEventArgs & arg){ play(true); }
+    void stopMaster(timelineEventArgs & arg){ stop(true); }
+    void pauseMaster(timelineEventArgs & arg){ setPause(arg.paused, true); }
+    void positionMaster(timelineEventArgs & arg){ setPosition(arg.time, true); }
+    void chapterMaster(timelineEventArgs & arg){ setChapter(arg.chapterIndex, true); }
 
     ofPtr<timeline> master;
 
@@ -44,6 +46,12 @@ public:
         if (!master) return;
         if (!byMaster) master->setPositionByMillis(millis);
     };
+
+    virtual void setChapter(int index, bool byMaster = false)
+    {
+        if (!master) return;
+        if (!byMaster) master->setChapter(index);
+    }
 };
 
 class timelineSyncIp : public timelineSyncBase{
@@ -90,6 +98,15 @@ public:
         sender.sendMessage(m);
     };
 
+    virtual void setChapter(int index, bool byMaster = false)
+    {
+        timelineSyncBase::setChapter(index, byMaster);
+        ofxOscMessage m;
+        m.setAddress("/chapter");
+        m.addIntArg(index);
+        sender.sendMessage(m);        
+    }
+
 };
 
 class timelineSyncLocal : public timelineSyncBase{
@@ -125,6 +142,12 @@ public:
         timelineSyncBase::setPosition(millis, byMaster);
         syncTimeline->setPositionByMillis(millis);
     };
+    
+    virtual void setChapter(int index, bool byMaster = false)
+    {
+        timelineSyncBase::setChapter(index, byMaster);
+        syncTimeline->setChapter(index);
+    }
 };
 
 // 再生

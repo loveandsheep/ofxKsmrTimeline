@@ -16,6 +16,7 @@ class block {
 public:
 
     void setInherit(bool b, ofPtr<block> ptr = nullptr){
+        edited = true;
         Inherit = b;
         if (b && ptr) inheritPtr = ptr;
         else inheritPtr.reset();
@@ -23,6 +24,7 @@ public:
 
     void setKeep(bool b)
     {
+        edited = true;
         keep = b;
         if (b) setTo(getFrom());
     }
@@ -43,12 +45,14 @@ public:
     }
 
     void setFrom(float val){
+        edited = true;
         from = val;
         maxVal = MAX(from, to);
         minVal = MIN(from, to);
     }
     
     void setTo(float val){
+        edited = true;
         to = val;
         maxVal = MAX(from, to);
         minVal = MIN(from, to);
@@ -80,7 +84,7 @@ public:
     }
 
     complementType const & getComplement(){return cmplType;}
-    void setComplement(complementType type){cmplType = type;}
+    void setComplement(complementType type){cmplType = type;edited = true;}
 
     //=====================================Curve
     float getValue(float pos, uint64_t const & length)
@@ -95,6 +99,8 @@ public:
         if (cmplType == CMPL_RAMP)     x = getRampControl(pos, length);
         if (cmplType == CMPL_EXPO)     x = getExpo(pos, easeOpt);
 
+        lastLength = length;
+
         return ofMap(x, 0, 1, getFrom(), getTo(), true);
     }
 
@@ -105,6 +111,7 @@ public:
     float getCubic(float x, uint8_t easeOption);
     float getExpo(float x, uint8_t easeOption);
 
+    uint64_t getLength(){return lastLength;}
     float getPow(float x, uint8_t easeOption, int numPow);
     float getRampControl(float x, uint64_t const & length);
 
@@ -112,6 +119,7 @@ public:
     static const uint8_t EASE_OUT = 0x2;
     static const uint8_t EASE_INOUT = 0x3;
 
+    bool edited = false;
     bool easeInFlag = true;
     bool easeOutFlag = true;
 
@@ -146,6 +154,7 @@ public:
 protected:
     
     complementType cmplType = CMPL_QUAD;
+    uint64_t lastLength = 0;
     bool Inherit = true;//継承…fromに前のブロック値を使う
     bool keep = false;
     float from = 0;

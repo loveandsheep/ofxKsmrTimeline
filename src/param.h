@@ -61,8 +61,9 @@ public:
 
     virtual ofJson getJsonData();
 
+    bool checkEdited();
     protected:
-  
+    bool edited = false;
     //プロパティ（編集される固定値）
     paramType   myType = PTYPE_FLOAT;
     vector<uint64_t>        keyPoints;

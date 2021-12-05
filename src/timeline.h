@@ -25,12 +25,13 @@ public:
     ofJson getJsonData();
 
     // タイムラインの再生・シーク
-    timelineEvent & getTimelineEvArg();
-    timelineEvent eventArg;
-    ofEvent<timelineEvent> ev_play;
-    ofEvent<timelineEvent> ev_stop;
-    ofEvent<timelineEvent> ev_pause;
-    ofEvent<timelineEvent> ev_seek;
+    timelineEventArgs & getTimelineEvArg();
+    timelineEventArgs eventArg;
+    ofEvent<timelineEventArgs> ev_play;
+    ofEvent<timelineEventArgs> ev_stop;
+    ofEvent<timelineEventArgs> ev_pause;
+    ofEvent<timelineEventArgs> ev_seek;
+    ofEvent<timelineEventArgs> ev_chapter;
     void play();
     void stop();
     void setPositionByMillis(uint64_t time);
@@ -39,8 +40,8 @@ public:
     void setPause(bool b);
 
     //ゲッター
-    uint64_t getPassed(){return passed;}
-    uint64_t getDuration(){return getCurrentChapter()->duration;}
+    uint64_t const & getPassed(){return passed;}
+    uint64_t const & getDuration(){return getCurrentChapter()->duration;}
     bool getPaused(){return paused;}
     bool getIsPlay(){return isPlay;}
     bool getIsLoop(){return getCurrentChapter()->isLoop;}
@@ -131,6 +132,7 @@ public:
     void removeChapter(int index);
     void clearChapter(bool completely = false);
 
+    bool edited = false;
 protected:
 
     timelineState currentState;
@@ -138,8 +140,8 @@ protected:
     ofxOscReceiver receiver;
     string sendAddr = "localhost";
     uint64_t seekOscCheck = 0;
-    int sendPort = 12400;
-    int recvPort = 12500;
+    int sendPort = 7000;
+    int recvPort = 7000;
 
     //チャプタープロパティ
     int currentChapterIndex = 0;

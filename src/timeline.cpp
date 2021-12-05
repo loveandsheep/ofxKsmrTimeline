@@ -11,8 +11,8 @@ void timeline::sendSyncJsonData(string host, int port)
     if (host == "") host = getSendAddr();
     if (port == 0) port = getSendPort();
 
-    ofxOscSender s;
-    s.setup(host, port);
+    ofxOscSender s_sync;
+    s_sync.setup(host, port);
 
     ofJson syncJson = getJsonData();
     syncJson["settings"].erase("osc");
@@ -30,13 +30,13 @@ void timeline::sendSyncJsonData(string host, int port)
         mes.addStringArg(dat.substr(st, ed - st));
         mes.addIntArg(i);
         mes.addIntArg(dat.length() / pieceSize + 1);
-        s.sendMessage(mes);
+        s_sync.sendMessage(mes);
     }
 
     ofxOscMessage joiner;
     joiner.setAddress("/json/set/parse");
 
-    s.sendMessage(joiner);
+    s_sync.sendMessage(joiner);
 }
 
 void timeline::drawMinimum(int x, int y)
@@ -60,6 +60,14 @@ timelineState const & timeline::update() {
     {
         ofxOscMessage m;
         receiver.getNextMessage(m);
+
+        if (m.getAddress().find("/track") != string::npos)
+        {
+            for (auto & tr : getTracks())
+            {
+                tr->controlMessage(m, getPassed(), getDuration());
+            }
+        }
 
         //JSONデータの読み出し
         if (m.getAddress() == "/json/set")
@@ -86,7 +94,8 @@ timelineState const & timeline::update() {
         // ip-Syncモードで送るsyncシグナル
         // 現在時刻その他の情報を返す
         if (m.getAddress() == "/sync")
-        {            ofxOscSender repSender;
+        {            
+            ofxOscSender repSender;
             ofxOscMessage reply;
             repSender.setup(m.getRemoteHost(), sendPort);
             reply.setAddress("/return/sync");
@@ -103,10 +112,11 @@ timelineState const & timeline::update() {
         if (m.getAddress() == "/return/json/get")
             setFromJson(ofJson::parse(m.getArgAsString(0)));
 
-        if (m.getAddress() == "/play") play();
-        if (m.getAddress() == "/stop") stop();
-        if (m.getAddress() == "/seek") setPositionByMillis(m.getArgAsInt64(0));
-        if (m.getAddress() == "/pause") setPause(m.getArgAsBool(0));
+        if (m.getAddress() == "/play")      play();
+        if (m.getAddress() == "/stop")      stop();
+        if (m.getAddress() == "/seek")      setPositionByMillis(m.getArgAsInt64(0));
+        if (m.getAddress() == "/pause")     setPause(m.getArgAsBool(0));
+        if (m.getAddress() == "/chapter")   setChapter(m.getArgAsInt(0));
 
     }
 
@@ -138,7 +148,11 @@ timelineState const & timeline::update() {
 
     sendOsc();
 
-    for (auto & tr : getTracks()) tr->update(currentState, getPassed());
+    for (auto & tr : getTracks()) 
+    {
+        tr->update(currentState, getPassed(), getDuration());
+        edited |= tr->checkEdited();
+    }
     return currentState;
 }
 
@@ -248,10 +262,11 @@ void timeline::setPause(bool b)
     ofNotifyEvent(ev_pause, getTimelineEvArg());
 }
 
-timelineEvent & timeline::getTimelineEvArg()
+timelineEventArgs & timeline::getTimelineEvArg()
 {
     eventArg.time = getPassed();
     eventArg.paused = paused;
+    eventArg.chapterIndex = currentChapterIndex;
     return eventArg;
 }
 
@@ -507,6 +522,7 @@ void timeline::setChapter(int index)
 {
     if (index < 0 || chapters.size() <= index) return;
     currentChapterIndex = index;
+    ofNotifyEvent(ev_chapter, getTimelineEvArg());
 }
 
 void timeline::removeChapter(int index)
