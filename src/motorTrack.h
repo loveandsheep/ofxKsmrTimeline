@@ -115,6 +115,7 @@ public:
         if (!j["drive"].empty()) doDrive = j["drive"].get<bool>();
         if (!j["motorID"].empty()) motorIndex = j["motorID"].get<int>();
         if (!j["stepDeg"].empty()) stepDeg = j["stepDeg"].get<float>();
+        if (!j["spin"].empty()) spin = j["spin"].get<bool>();
     }
 
     virtual ofJson getJsonData(){
@@ -126,6 +127,7 @@ public:
         j["drive"] = doDrive;
         j["motorID"] = motorIndex;
         j["stepDeg"] = stepDeg;
+        j["spin"] = spin;
 
         for (auto & p : params)
             j["params"].push_back(p->getJsonData());
