@@ -83,7 +83,32 @@ timelineState const & timeline::update() {
             {
                 d += jp;
             }
-            setFromJson(ofJson::parse(d));
+            bool parseSuccess = true;
+            try
+            {
+                setFromJson(ofJson::parse(d));
+            }
+            catch(const std::exception& e)
+            {
+                parseSuccess = false;
+                std::cerr << e.what() << '\n';
+                ofxOscSender sender;
+                sender.setup(m.getRemoteHost(), sendPort);
+                ofxOscMessage log;
+                log.setAddress("/error");
+                log.addStringArg("Sync failed.");
+                sender.sendMessage(log);
+                cout << "parse error." << endl;
+            }
+            if (parseSuccess)
+            {
+                sender.setup(m.getRemoteHost(), sendPort);
+                ofxOscMessage log;
+                log.setAddress("/log");
+                log.addStringArg("Sync success.");
+                sender.sendMessage(log);
+                cout << "parse success." << endl;
+            }
         }
 
         if (m.getAddress() == "/json/save")
