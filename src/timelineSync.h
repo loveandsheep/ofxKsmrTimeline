@@ -55,12 +55,26 @@ public:
 };
 
 class timelineSyncIp : public timelineSyncBase{
+protected:
+    string sendHost = "localhost";
+    int sendPort = 7000;
 public:
+
     ofxOscSender sender;
+
+    string getSenderAddress(){return sendHost;}
+    int getPort(){return sendPort;};
+
+    void setSenderAddress(string addr, int port){
+        sendHost = addr;
+        sendPort = port;
+        sender.setup(addr, port);
+    }
+
     void setup(ofPtr<timeline> masterPtr, string addr, int port)
     {
+        setSenderAddress(addr, port);
         timelineSyncBase::setup(masterPtr);
-        sender.setup(addr, port);
     }
 
     virtual void play(bool byMaster = false)

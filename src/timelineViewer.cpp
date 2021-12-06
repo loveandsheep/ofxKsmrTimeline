@@ -14,6 +14,9 @@ void timelineViewer::setup(ofPtr<timeline> tmPtr) {
     ofAddListener(ofEvents().mouseDragged, this, &timelineViewer::mouseDragged);
     ofAddListener(ofEvents().mouseReleased, this, &timelineViewer::mouseReleased);
     ofAddListener(ofEvents().mouseScrolled, this, &timelineViewer::mouseScrolled);
+
+    //inputTextが変更される度にsender::setupが発火するとまいっちゃうのでこういう風になってる
+    strcpy(gui_oscAddrInput, tm->getSendAddr().c_str());
 }
 
 void timelineViewer::update() {
@@ -276,7 +279,7 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
         {
             motorTrack* trPtr = (motorTrack*)tr.get();
             if (ImGui::InputInt("ID", &trPtr->motorIndex)) trPtr->edited = true;
-            if (ImGui::InputFloat("Deg/Step", &trPtr->stepDeg, 0.01)) trPtr->edited = true;
+            if (ImGui::InputFloat("Deg/Step", &trPtr->stepDeg, 0.01, 0.1, "%.4f")) trPtr->edited = true;
             if (ImGui::Button("Standby"))
             {
                 trPtr->motorStandby(tm->getPassed());
@@ -291,6 +294,11 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
                 mes.setAddress("/track/preset");
                 mes.addStringArg(tr->getName());
                 tm->getSender().sendMessage(mes);
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("ALMRST"))
+            {
+                trPtr->resetAlarm();
             }
             if (ImGui::Button(" - "))
             {
@@ -970,9 +978,7 @@ void timelineViewer::drawGui()
     }
 
     ImGui::Text(" \n=== OSC ===");
-    ImGui::Checkbox("Send on seek", &tm->sendOnSeek);
-    ImGui::Checkbox("Send always", &tm->sendAlways); 
-
+    
     gui_oscSendPort = tm->getSendPort();
     gui_oscReceivePort = tm->getReceiverPort();
 
@@ -983,6 +989,10 @@ void timelineViewer::drawGui()
     if (ImGui::Button("Set")) tm->setSenderAddr(string(gui_oscAddrInput));
     if (ImGui::DragInt("SendPort", &gui_oscSendPort, 1, 0, 65535)) tm->setSenderPort(gui_oscSendPort);
     if (ImGui::DragInt("ReceivePort", &gui_oscReceivePort, 1, 0, 65535)) tm->setReceiverPort(gui_oscReceivePort);
+    
+    ImGui::Checkbox("Send on seek", &tm->sendOnSeek);
+    ImGui::SameLine();
+    ImGui::Checkbox("Send always", &tm->sendAlways); 
 
     if (selBlocks.size() > 0)
     {
