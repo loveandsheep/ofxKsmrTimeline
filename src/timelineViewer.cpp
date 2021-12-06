@@ -1190,8 +1190,8 @@ void timelineViewer::drawParameterGui(ofPtr<block> & b, ofPtr<param> & p)
 
     if (gui_curveSelect == CMPL_RAMP)
     {
-        ImGui::DragFloat("Accel", &b->accel, 0.01, 0.1, 1000);
-        ImGui::DragFloat("Decel", &b->decel, 0.01, 0.1, 1000);
+        ImGui::DragFloat("Accel", &b->accel, 0.01, 0.01, 1000);
+        ImGui::DragFloat("Decel", &b->decel, 0.001, 0.01, 1000);
         string sp = "Speed :" + ofToString(b->speed_max);
         ImGui::Text(sp.c_str());
     }
