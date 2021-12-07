@@ -29,7 +29,7 @@ public:
         int  index = p->getBlockIndexByTime(passed);
         auto b = p->pickBlocksByTime(passed)[0];
         ofxModbusMotorDriver::instance().goAbs(motorIndex, b->getTo() / stepDeg,
-            30 / stepDeg, 1000 / stepDeg,1000 / stepDeg);
+            30 / stepDeg, 50 / stepDeg, 50 / stepDeg);
     }
 
     virtual void controlMessage(ofxOscMessage & m, uint64_t passed, uint64_t duration)

@@ -60,13 +60,22 @@ timelineState const & timeline::update() {
     {
         ofxOscMessage m;
         receiver.getNextMessage(m);
-
+        cout << "received :" << m.getAddress() << endl;
         if (m.getAddress().find("/track") != string::npos)
         {
             for (auto & tr : getTracks())
             {
                 tr->controlMessage(m, getPassed(), getDuration());
             }
+        }
+
+        if (m.getAddress() == "/error")
+        {
+            lastLog = "err :" + m.getArgAsString(0);
+        }
+        if (m.getAddress() == "/log")
+        {
+            lastLog = "log :" + m.getArgAsString(0);
         }
 
         //JSONデータの読み出し
