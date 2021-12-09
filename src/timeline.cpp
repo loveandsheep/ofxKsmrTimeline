@@ -430,7 +430,6 @@ ofJson timeline::getJsonData()
     for (auto & c : chapters)
     {
         ofJson chj;
-        cout << "Duration :" << c->name << "::" << c->duration << endl;
         chj["duration"] = c->duration;
         chj["isLoop"] = c->isLoop;
         chj["chapterName"] = c->name;
