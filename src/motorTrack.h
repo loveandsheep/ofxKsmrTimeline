@@ -1,6 +1,6 @@
 #include "track.h"
 
-// #define MODBUS
+#define MODBUS
 
 #ifdef MODBUS
 #include "ofxModbusMotorDriver.h"
@@ -36,6 +36,7 @@ public:
 #ifdef MODBUS
         ofxModbusMotorDriver::instance().goAbs(motorIndex, b->getTo() / stepDeg,
             30 / stepDeg, 50 / stepDeg, 50 / stepDeg);
+#endif
     }
 
     virtual void controlMessage(ofxOscMessage & m, uint64_t passed, uint64_t duration)

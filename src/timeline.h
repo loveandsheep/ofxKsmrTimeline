@@ -22,8 +22,13 @@ public:
     void clear(bool completely = false);
     void drawMinimum(int x, int y);
 
-    string lastLog = "";
 
+    string lastLog = "";
+    int syncPort = 7124;
+    void sendLog(string host, string message);
+    void sendError(string host, string message);
+
+    void receivedMessage(ofxOscMessage & m);
     void setFromJson(ofJson data);
     ofJson getJsonData();
 
@@ -141,6 +146,7 @@ protected:
     timelineState currentState;
     ofxOscSender sender;
     ofxOscReceiver receiver;
+    ofxOscReceiver syncRecv;
     string sendAddr = "localhost";
     uint64_t seekOscCheck = 0;
     int sendPort = 7000;

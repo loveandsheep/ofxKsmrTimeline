@@ -3,6 +3,7 @@
 void timeline::setup() {
     sender.setup(sendAddr, sendPort);
     receiver.setup(recvPort);
+    syncRecv.setup(syncPort);
     clear();
 }
 
@@ -62,98 +63,14 @@ timelineState const & timeline::update() {
     {
         ofxOscMessage m;
         receiver.getNextMessage(m);
-        cout << "received :" << m.getAddress() << endl;
-        if (m.getAddress().find("/track") != string::npos)
-        {
-            for (auto & tr : getTracks())
-            {
-                tr->controlMessage(m, getPassed(), getDuration());
-            }
-        }
+        receivedMessage(m);
+    }
 
-        if (m.getAddress() == "/error")
-        {
-            lastLog = "err :" + m.getArgAsString(0);
-        }
-        if (m.getAddress() == "/log")
-        {
-            lastLog = "log :" + m.getArgAsString(0);
-        }
-
-        //JSONデータの読み出し
-        if (m.getAddress() == "/json/set")
-        {
-            json_piece.resize(m.getArgAsInt(2));
-            json_piece[m.getArgAsInt(1)] = m.getArgAsString(0);
-        }
-
-        if (m.getAddress() == "/json/set/parse")
-        {
-            string d = "";
-            for (auto & jp : json_piece)
-            {
-                d += jp;
-            }
-            bool parseSuccess = true;
-            try
-            {
-                setFromJson(ofJson::parse(d));
-            }
-            catch(const std::exception& e)
-            {
-                parseSuccess = false;
-                std::cerr << e.what() << '\n';
-                ofxOscSender sender;
-                sender.setup(m.getRemoteHost(), sendPort);
-                ofxOscMessage log;
-                log.setAddress("/error");
-                log.addStringArg("Sync failed.");
-                sender.sendMessage(log);
-                cout << "parse error." << endl;
-            }
-            if (parseSuccess)
-            {
-                sender.setup(m.getRemoteHost(), sendPort);
-                ofxOscMessage log;
-                log.setAddress("/log");
-                log.addStringArg("Sync success.");
-                sender.sendMessage(log);
-                cout << "parse success." << endl;
-            }
-        }
-
-        if (m.getAddress() == "/json/save")
-        {
-            save(m.getArgAsString(0));
-        }
-
-        // ip-Syncモードで送るsyncシグナル
-        // 現在時刻その他の情報を返す
-        if (m.getAddress() == "/sync")
-        {            
-            ofxOscSender repSender;
-            ofxOscMessage reply;
-            repSender.setup(m.getRemoteHost(), sendPort);
-            reply.setAddress("/return/sync");
-            reply.addIntArg(getPassed());
-            repSender.sendMessage(reply);
-        }
-
-        if (m.getAddress() == "/json/get")
-        {
-            sendSyncJsonData(m.getRemoteHost(), m.getArgAsInt(0));
-            cout << "Send to :" << m.getRemoteHost() << "::" << m.getArgAsInt(0) << endl;
-        } 
-
-        if (m.getAddress() == "/return/json/get")
-            setFromJson(ofJson::parse(m.getArgAsString(0)));
-
-        if (m.getAddress() == "/play")      play();
-        if (m.getAddress() == "/stop")      stop();
-        if (m.getAddress() == "/seek")      setPositionByMillis(m.getArgAsInt64(0));
-        if (m.getAddress() == "/pause")     setPause(m.getArgAsBool(0));
-        if (m.getAddress() == "/chapter")   setChapter(m.getArgAsInt(0));
-
+    while(syncRecv.hasWaitingMessages())
+    {
+        ofxOscMessage m;
+        receiver.getNextMessage(m);
+        receivedMessage(m);
     }
 
     timelineState prev = currentState;
@@ -190,6 +107,116 @@ timelineState const & timeline::update() {
         edited |= tr->checkEdited();
     }
     return currentState;
+}
+
+void timeline::receivedMessage(ofxOscMessage & m)
+{
+    if (m.getAddress().find("/track") != string::npos)
+    {
+        for (auto & tr : getTracks())
+        {
+            tr->controlMessage(m, getPassed(), getDuration());
+        }
+    }
+
+    if (m.getAddress() == "/error")
+    {
+        lastLog = "err :" + m.getArgAsString(0);
+    }
+    if (m.getAddress() == "/log")
+    {
+        lastLog = "log :" + m.getArgAsString(0);
+    }
+
+    //JSONデータの読み出し
+    if (m.getAddress() == "/json/set")
+    {
+        json_piece.resize(m.getArgAsInt(2));
+        json_piece[m.getArgAsInt(1)] = m.getArgAsString(0);
+    }
+
+    if (m.getAddress() == "/json/set/parse")
+    {
+        string d = "";
+        for (auto & jp : json_piece)
+        {
+            d += jp;
+        }
+        bool parseSuccess = true;
+        try
+        {
+            setFromJson(ofJson::parse(d));
+        }
+        catch(const std::exception& e)
+        {
+            sendLog(m.getRemoteHost(), "[sync] sync data error.");
+        }
+        if (parseSuccess)
+        {
+            sendLog(m.getRemoteHost(), "[sync] sync data success.");
+        }
+    }
+
+    if (m.getAddress() == "/json/save")
+    {
+        save(m.getArgAsString(0));
+    }
+
+    // ip-Syncモードで送るsyncシグナル
+    // 現在時刻その他の情報を返す
+    if (m.getAddress() == "/sync")
+    {            
+        ofxOscSender repSender;
+        ofxOscMessage reply;
+        repSender.setup(m.getRemoteHost(), sendPort);
+        reply.setAddress("/return/sync");
+        reply.addIntArg(getPassed());
+        repSender.sendMessage(reply);
+    }
+
+    if (m.getAddress() == "/json/get")
+    {
+        sendSyncJsonData(m.getRemoteHost(), m.getArgAsInt(0));
+        cout << "Send to :" << m.getRemoteHost() << "::" << m.getArgAsInt(0) << endl;
+    } 
+
+    if (m.getAddress() == "/return/json/get")
+        setFromJson(ofJson::parse(m.getArgAsString(0)));
+
+    if (m.getAddress() == "/play")
+    {
+        play();
+        sendLog(m.getRemoteHost(), "[sync] play.");
+    }
+    if (m.getAddress() == "/stop")
+    {
+        stop();
+        sendLog(m.getRemoteHost(), "[sync] stop.");
+    }
+    if (m.getAddress() == "/seek")
+    {
+        setPositionByMillis(m.getArgAsInt64(0));
+        sendLog(m.getRemoteHost(), "[sync] seek to :" + ofToString(m.getArgAsInt64(0)));
+    }
+    if (m.getAddress() == "/pause")
+    {
+        bool b = m.getArgAsBool(0);
+        setPause(b);
+        sendLog(m.getRemoteHost(), string("[sync] pause :") + (b ? "ON" : "OFF"));
+    }
+    if (m.getAddress() == "/chapter") 
+    {
+        int ci = m.getArgAsInt(0);
+        if (ci < chapters.size())
+        {
+            setChapter(ci);
+            sendLog(m.getRemoteHost(), "[sync] chapter :" + chapters[ci]->name);
+        }
+        else
+        {
+            sendError(m.getRemoteHost(), "[sync] chapter size error");
+        }
+    } 
 }
 
 void timeline::sendOsc()
@@ -602,4 +629,28 @@ vector<string> timeline::getChapterNames()
     vector<string> ret;
     for (auto & c : chapters) ret.push_back(c->name);
     return ret;
+}
+
+void timeline::sendLog(string host, string message)
+{
+    ofxOscSender sender;
+    ofxOscMessage log;
+
+    log.setAddress("/log");
+    log.addStringArg(message);
+
+    sender.setup(host, syncPort);
+    sender.sendMessage(log);
+}
+
+void timeline::sendError(string host, string message)
+{
+    ofxOscSender sender;
+    ofxOscMessage log;
+
+    log.setAddress("/error");
+    log.addStringArg(message);
+
+    sender.setup(host, syncPort);
+    sender.sendMessage(log);
 }
