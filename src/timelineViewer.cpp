@@ -275,6 +275,35 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
         }
         ImGui::Text(val);
 
+        if (tr->getType() == TRACK_FLOAT)
+        {
+            if (ImGui::Button("ConvMotor"))
+            {
+                string name = tr->getName();
+                tr->setName(name + "conv");
+                ofPtr<trackBase> nt = tm->addTrack(name, TRACK_MOTOR);
+                motorTrack* trPtr = (motorTrack*)nt.get();
+
+                vector<ofPtr<block> > & bls = tr->getParamsRef()[0]->getBlocks(0);
+
+                for (int i = 0;i < bls.size();i++)
+                {
+                    uint64_t kp = tr->getParamsRef()[0]->getKeyPoints()[i];
+                    if (kp != 0) trPtr->getParamsRef()[0]->addKeyPoint(kp);
+                    auto b = trPtr->getParamsRef()[0]->getBlocks(0)[i];
+                    b->setFrom(bls[i]->getFrom());
+                    b->setTo(bls[i]->getTo());
+                    b->setComplement(CMPL_RAMP);
+                    b->accel = 0.05;
+                    b->decel = 0.05;
+                    b->setKeep(bls[i]->getKeep());
+                    b->label = bls[i]->label;
+                }
+                trPtr->stepDeg = 0.0036;
+                removeTrack(tr);
+            }
+        }
+
         if (tr->getType() == TRACK_MOTOR)
         {
             motorTrack* trPtr = (motorTrack*)tr.get();
@@ -815,6 +844,10 @@ void timelineViewer::drawGui()
     if (ImGui::Button("UnFold")) for (auto & t : tm->getTracks()) t->fold = false;
     
     ImGui::Text("===Sync===");
+    string info = "Dest :" + tm->getSendAddr() + "\n";
+    info += "Port :" + ofToString(tm->getSendPort()) + "::" + ofToString(tm->getReceiverPort()) + "\n";
+
+    ImGui::Text(info.c_str());
     ImGui::PushStyleColor(ImGuiCol_Button, ofFloatColor::fromHsb(tm->edited ? 0.1 : 0.4, 0.5, 0.5));
     if (ImGui::Button("Sync data")) 
     {

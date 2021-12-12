@@ -22,6 +22,8 @@ public:
     void clear(bool completely = false);
     void drawMinimum(int x, int y);
 
+    string lastLog = "";
+
     void setFromJson(ofJson data);
     ofJson getJsonData();
 
