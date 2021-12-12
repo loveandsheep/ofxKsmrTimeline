@@ -141,6 +141,8 @@ public:
     void clearChapter(bool completely = false);
 
     bool edited = false;
+    
+    size_t getHash(){return jsonHash;}
 protected:
 
     timelineState currentState;
@@ -163,6 +165,7 @@ protected:
 
     string currentPath = "";
     string currentFileName = "";
+    size_t jsonHash = 0;
 };
 
 //イベントのgetParameterのみ特殊化

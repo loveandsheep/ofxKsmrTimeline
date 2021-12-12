@@ -153,13 +153,16 @@ void timeline::receivedMessage(ofxOscMessage & m)
         }
         if (parseSuccess)
         {
-            sendLog(m.getRemoteHost(), "[sync] sync data success.");
+            stringstream ss;
+            ss << "[sync] sync data success\nHash : 0x" << hex << getHash();
+            sendLog(m.getRemoteHost(), ss.str());
         }
     }
 
     if (m.getAddress() == "/json/save")
     {
         save(m.getArgAsString(0));
+        sendLog(m.getRemoteHost(), "[sync] save remote 'main.json'");
     }
 
     // ip-Syncモードで送るsyncシグナル
@@ -503,6 +506,10 @@ ofJson timeline::getJsonData()
         for (auto & t : c->tracks) chj["tracks"].push_back(t->getJsonData());
         j_tm.push_back(chj);
     }
+
+    ofJson jHash = j;
+    jHash["settings"].erase("osc");
+    jsonHash = hash<string>()(jHash.dump());
 
     return j;
 }

@@ -844,10 +844,11 @@ void timelineViewer::drawGui()
     if (ImGui::Button("UnFold")) for (auto & t : tm->getTracks()) t->fold = false;
     
     ImGui::Text("===Sync===");
-    string info = "Dest :" + tm->getSendAddr() + "\n";
-    info += "Port :" + ofToString(tm->getSendPort()) + "::" + ofToString(tm->getReceiverPort()) + "\n";
+    stringstream info;
+    info << "Hash : 0x" << hex << tm->getHash() << endl;
+    info << "Dest :" << tm->getSendAddr() << endl;
 
-    ImGui::Text(info.c_str());
+    ImGui::Text(info.str().c_str());
     ImGui::PushStyleColor(ImGuiCol_Button, ofFloatColor::fromHsb(tm->edited ? 0.1 : 0.4, 0.5, 0.5));
     if (ImGui::Button("Sync data")) 
     {
