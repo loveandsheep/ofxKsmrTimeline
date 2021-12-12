@@ -73,12 +73,14 @@ public:
 
     void setup(ofPtr<timeline> masterPtr, string addr, int port)
     {
+        if (addr == "localhost" || addr == "127.0.0.1") return;
         setSenderAddress(addr, port);
         timelineSyncBase::setup(masterPtr);
     }
 
     virtual void play(bool byMaster = false)
     {
+        if (addr == "localhost" || addr == "127.0.0.1") return;
         timelineSyncBase::play(byMaster);
         ofxOscMessage m;
         m.setAddress("/play");
@@ -87,6 +89,7 @@ public:
     
     virtual void setPause (bool b, bool byMaster = false)
     {
+        if (addr == "localhost" || addr == "127.0.0.1") return;
         timelineSyncBase::setPause(b, byMaster);
         ofxOscMessage m;
         m.setAddress("/pause");
@@ -96,6 +99,7 @@ public:
 
     virtual void stop (bool byMaster = false)
     {
+        if (addr == "localhost" || addr == "127.0.0.1") return;
         timelineSyncBase::stop(byMaster);
         ofxOscMessage m;
         m.setAddress("/stop");
@@ -105,6 +109,7 @@ public:
 
     virtual void setPosition(uint64_t millis, bool byMaster = false)
     {
+        if (addr == "localhost" || addr == "127.0.0.1") return;
         timelineSyncBase::setPosition(millis, byMaster);
         ofxOscMessage m;
         m.setAddress("/seek");
@@ -114,6 +119,7 @@ public:
 
     virtual void setChapter(int index, bool byMaster = false)
     {
+        if (addr == "localhost" || addr == "127.0.0.1") return;
         timelineSyncBase::setChapter(index, byMaster);
         ofxOscMessage m;
         m.setAddress("/chapter");
