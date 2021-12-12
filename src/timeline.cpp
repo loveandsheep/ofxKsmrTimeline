@@ -147,14 +147,14 @@ void timeline::receivedMessage(ofxOscMessage & m)
         {
             setFromJson(ofJson::parse(d));
         }
-        catch(const std::exception& e)
+        catch(const std::exception & e)
         {
             sendLog(m.getRemoteHost(), "[sync] sync data error.");
         }
         if (parseSuccess)
         {
             stringstream ss;
-            ss << "[sync] sync data success\nHash : 0x" << hex << getHash();
+            ss << "[sync] sync data success\nHash : 0x" << hex << hash<string>()(d);
             sendLog(m.getRemoteHost(), ss.str());
         }
     }
