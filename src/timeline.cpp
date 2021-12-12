@@ -154,7 +154,7 @@ void timeline::receivedMessage(ofxOscMessage & m)
         if (parseSuccess)
         {
             stringstream ss;
-            ss << "[sync] sync data success\nHash : 0x" << hex << hash<string>()(d);
+            ss << "[sync] sync data success\nHash : 0x" << hex << crc16(d.c_str(), d.length());
             sendLog(m.getRemoteHost(), ss.str());
         }
     }
@@ -509,7 +509,8 @@ ofJson timeline::getJsonData()
 
     ofJson jHash = j;
     jHash["settings"].erase("osc");
-    jsonHash = hash<string>()(jHash.dump());
+    string jhs = jHash.dump();
+    jsonHash = crc16(jhs.c_str(), jhs.length());
 
     return j;
 }
@@ -660,4 +661,19 @@ void timeline::sendError(string host, string message)
 
     sender.setup(host, syncPort);
     sender.sendMessage(log);
+}
+
+uint16_t timeline::crc16(const char* data, int numByte)
+{
+    uint16_t crc = 0xFFFF;
+    for (int i = 0;i < numByte;i++)
+    {
+        crc ^= data[i];
+        for (int j = 0;j < 8;j++)
+        {
+            if (crc & 1) crc = (crc >> 1) ^ 0xA001;
+            else crc >>= 1;
+        }
+    }
+    return crc;
 }

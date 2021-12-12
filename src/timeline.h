@@ -141,7 +141,7 @@ public:
     void clearChapter(bool completely = false);
 
     bool edited = false;
-    
+
     size_t getHash(){return jsonHash;}
 protected:
 
@@ -165,7 +165,8 @@ protected:
 
     string currentPath = "";
     string currentFileName = "";
-    size_t jsonHash = 0;
+    uint16_t jsonHash = 0;
+    uint16_t crc16(const char* data, int numByte);
 };
 
 //イベントのgetParameterのみ特殊化
