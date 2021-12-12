@@ -69,7 +69,7 @@ timelineState const & timeline::update() {
     while(syncRecv.hasWaitingMessages())
     {
         ofxOscMessage m;
-        receiver.getNextMessage(m);
+        syncRecv.getNextMessage(m);
         receivedMessage(m);
     }
 
