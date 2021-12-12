@@ -39,7 +39,7 @@ void timelineViewer::draw(ofRectangle area) {
     
     area.height = heightSum;
 
-    ofSetHexColor(0x768491);
+    ofSetColor(tm->getCurrentChapter()->bgColor);
     ofDrawRectangle(area);
     isEditorHovered = area.inside(ofGetMouseX(), ofGetMouseY());
     
@@ -883,6 +883,8 @@ void timelineViewer::drawGui()
         tm->setChapter(gui_chapterIndex);
         zoomOut();
     }
+
+    ImGui::ColorEdit3("chapterBg", &tm->getCurrentChapter()->bgColor[0], ImGuiColorEditFlags_Float);
 
     strcpy(gui_chapterName, tm->getCurrentChapter()->name.c_str());
     if (ImGui::InputText("ChapterName", gui_chapterName, numChapterName))

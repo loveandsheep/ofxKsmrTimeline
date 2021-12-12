@@ -139,9 +139,11 @@ int param::addKeyPoint(uint64_t const & time)
     keyPoints.insert(keyPoints.begin() + index, time);
     for (int i = 0;i < numUsingBlockLine;i++)
     {
+        float value = 0.5;
+        if (index > 0 && blocks[i][index - 1]) value = blocks[i][index - 1]->getTo();
         ofPtr<block> nb = make_shared<block>();
-        nb->setFrom(0.0);
-        nb->setTo(0.0);
+        nb->setFrom(value);
+        nb->setTo(value);
         if (i == 3) 
         {
             nb->setFrom(1);

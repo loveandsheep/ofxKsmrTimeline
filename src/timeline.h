@@ -12,6 +12,7 @@ public:
     uint64_t                    duration = 1000;
     bool                        isLoop = false;
     vector<ofPtr<trackBase> >   tracks;
+    ofFloatColor                bgColor = ofFloatColor(0.46, 0.51, 0.56);
 };
 
 class timeline {

@@ -376,6 +376,13 @@ void timeline::setFromJson(ofJson j)
 
         setDuration(j["duration"].get<int>());
         if (!j["isLoop"].empty()) setIsLoop(j["isLoop"].get<bool>());
+        if (!j["bgColor"].empty())
+        {
+            getCurrentChapter()->bgColor.r = j["bgColor"][0];
+            getCurrentChapter()->bgColor.g = j["bgColor"][1];
+            getCurrentChapter()->bgColor.b = j["bgColor"][2];
+        }
+
 
         //トラックの追加
         for (auto & jtr : j["tracks"])
@@ -450,11 +457,13 @@ ofJson timeline::getJsonData()
     for (auto & c : chapters)
     {
         ofJson chj;
-        cout << "Duration :" << c->name << "::" << c->duration << endl;
         chj["duration"] = c->duration;
         chj["isLoop"] = c->isLoop;
         chj["chapterName"] = c->name;
-
+        chj["bgColor"][0] = c->bgColor.r;
+        chj["bgColor"][1] = c->bgColor.g;
+        chj["bgColor"][2] = c->bgColor.b;
+        
         for (auto & t : c->tracks) chj["tracks"].push_back(t->getJsonData());
         j_tm.push_back(chj);
     }

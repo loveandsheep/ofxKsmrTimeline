@@ -120,8 +120,8 @@ public:
     static const uint8_t EASE_INOUT = 0x3;
 
     bool edited = false;
-    bool easeInFlag = false;
-    bool easeOutFlag = false;
+    bool easeInFlag = true;
+    bool easeOutFlag = true;
 
     string eventName = "newEvent";
     string label = "";
@@ -153,7 +153,7 @@ public:
 
 protected:
     
-    complementType cmplType;
+    complementType cmplType = CMPL_QUAD;
     uint64_t lastLength = 0;
     bool Inherit = true;//継承…fromに前のブロック値を使う
     bool keep = false;

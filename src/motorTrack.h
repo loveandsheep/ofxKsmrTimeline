@@ -1,5 +1,10 @@
 #include "track.h"
+
+// #define MODBUS
+
+#ifdef MODBUS
 #include "ofxModbusMotorDriver.h"
+#endif
 
 class motorTrack : public trackBase {
 public:
@@ -28,12 +33,16 @@ public:
         auto p = getParamsRef()[0];
         int  index = p->getBlockIndexByTime(passed);
         auto b = p->pickBlocksByTime(passed)[0];
+#ifdef MODBUS
         ofxModbusMotorDriver::instance().goAbs(motorIndex, b->getTo() / stepDeg,
             30 / stepDeg, 1000 / stepDeg,1000 / stepDeg);
+#endif
     }
 
     virtual void controlMessage(ofxOscMessage & m, uint64_t passed, uint64_t duration)
     {
+#ifdef MODBUS
+
         if (m.getArgAsString(0) == getName())
         {
             auto & motor = ofxModbusMotorDriver::instance();
@@ -53,6 +62,8 @@ public:
                 motor.setRemote(motorIndex, RIO_PRESET, false);
             }
         }
+
+#endif
     }
 
     void resetAlarm()
@@ -85,7 +96,7 @@ public:
                     if (!doDrive) drive = false;
                     if (!spin && b->getComplement() != CMPL_RAMP) drive = false;
                     if (spin && b->getComplement() != CMPL_LINEAR) drive = false;
-
+#ifdef MODBUS
                     if (drive)
                     {
                         if (spin)
@@ -104,7 +115,7 @@ public:
                                 b->decel * 1000 / stepDeg);
                         }
                     }
-
+#endif
                 }
 
                 lastBlock = index;

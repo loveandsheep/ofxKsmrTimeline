@@ -109,7 +109,7 @@ protected:
     vector<ofPtr<param> > selParentParam;
     string mouseLock = "free";
     bool handToolFlag = false;//スペースキー移動
-    bool doSnap = true;
+    bool doSnap = false;
 
     static const int foldedHeight = 30;
     ofPtr<block> currentViewBlock;
