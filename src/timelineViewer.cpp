@@ -864,7 +864,7 @@ void timelineViewer::drawGui()
         ofxOscMessage m;
         m.setAddress("/json/get");
         m.addIntArg(tm->getReceiverPort());
-        sender.setup(tm->getSendAddr(), tm->getSendPort());
+        sender.setup(tm->getSendAddr(), tm->syncPort);
         sender.sendMessage(m);
         cout << "Get request to " << tm->getSendAddr() << "::" << tm->getReceiverPort() << endl;
     }
@@ -875,17 +875,19 @@ void timelineViewer::drawGui()
         ofxOscMessage m;
         m.setAddress("/json/save");
         m.addStringArg("main.json");
-        sender.setup(tm->getSendAddr(), tm->getSendPort());
+        sender.setup(tm->getSendAddr(), tm->syncPort);
         sender.sendMessage(m);
     }
     if (ImGui::Button("Standby All"))
     {
         for (auto & tr : tm->getTracks())
         {
+            ofxOscSender sender;
             ofxOscMessage mes;
             mes.setAddress("/track/standby");
             mes.addStringArg(tr->getName());
-            tm->getSender().sendMessage(mes);
+            sender.setup(tm->getSendAddr(), tm->syncPort);
+            sender.sendMessage(mes);
         }
     }
 

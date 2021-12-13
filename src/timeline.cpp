@@ -14,7 +14,7 @@ void timeline::sendSyncJsonData(string host, int port)
 
     ofxOscSender s_sync;
     ofxOscBundle bundle;
-    s_sync.setup(host, port);
+    s_sync.setup(host, syncPort);
 
     ofJson syncJson = getJsonData();
     syncJson["settings"].erase("osc");
