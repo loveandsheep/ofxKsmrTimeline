@@ -180,7 +180,7 @@ void timeline::receivedMessage(ofxOscMessage & m)
     if (m.getAddress() == "/json/get")
     {
         sendSyncJsonData(m.getRemoteHost(), m.getArgAsInt(0));
-        cout << "Send to :" << m.getRemoteHost() << "::" << m.getArgAsInt(0) << endl;
+        sendLog(m.getRemoteHost(), "[sync] save remote 'main.json'");
     } 
 
     if (m.getAddress() == "/play")
