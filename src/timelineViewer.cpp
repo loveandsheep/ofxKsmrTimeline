@@ -863,10 +863,9 @@ void timelineViewer::drawGui()
         ofxOscSender sender;
         ofxOscMessage m;
         m.setAddress("/json/get");
-        m.addIntArg(tm->getReceiverPort());
+        m.addIntArg(tm->syncPort);
         sender.setup(tm->getSendAddr(), tm->syncPort);
         sender.sendMessage(m);
-        cout << "Get request to " << tm->getSendAddr() << "::" << tm->getReceiverPort() << endl;
     }
 
     if (ImGui::Button("Save remote as main.json"))

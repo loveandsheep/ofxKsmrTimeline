@@ -6,6 +6,14 @@
 
 class timelineSyncBase;
 
+// ポートについて
+// timeline => 任意のアプリ...sendAddr(localhost), sendPort(7000)
+// 任意のアプリ => timeline...recvPort(7000),
+
+// /sync...ip_syncモードの同期メッセージ
+// /json/get...
+// /json/set
+
 class chapter {
 public:
     string                      name = "chapter";

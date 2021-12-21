@@ -183,9 +183,6 @@ void timeline::receivedMessage(ofxOscMessage & m)
         cout << "Send to :" << m.getRemoteHost() << "::" << m.getArgAsInt(0) << endl;
     } 
 
-    if (m.getAddress() == "/return/json/get")
-        setFromJson(ofJson::parse(m.getArgAsString(0)));
-
     if (m.getAddress() == "/play")
     {
         play();
