@@ -338,16 +338,6 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
                 mes.setAddress("/track/standby");
                 mes.addStringArg(tr->getName());
                 syncSender.sendMessage(mes);
-            }ImGui::SameLine();
-
-            if (ImGui::Button("Preset"))
-            {
-                ofxOscMessage mes;
-                ofxOscSender syncSender;
-                syncSender.setup(tm->getSendAddr(), tm->syncPort);
-                mes.setAddress("/track/preset");
-                mes.addStringArg(tr->getName());
-                syncSender.sendMessage(mes);
             }
             ImGui::SameLine();
             if (ImGui::Button("ALMRST"))
@@ -384,6 +374,17 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
             ImGui::SameLine();
             if (ImGui::Checkbox("Drive", &trPtr->doDrive)) trPtr->edited = true;
             if (ImGui::Checkbox("Spin", &trPtr->spin)) trPtr->edited = true;
+            ImGui::SameLine();
+
+            if (ImGui::Button("Preset"))
+            {
+                ofxOscMessage mes;
+                ofxOscSender syncSender;
+                syncSender.setup(tm->getSendAddr(), tm->syncPort);
+                mes.setAddress("/track/preset");
+                mes.addStringArg(tr->getName());
+                syncSender.sendMessage(mes);
+            }
         }
 
     }
