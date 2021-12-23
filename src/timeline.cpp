@@ -105,6 +105,14 @@ timelineState const & timeline::update() {
     {
         tr->update(currentState, getPassed(), getDuration());
         edited |= tr->checkEdited();
+
+        if (tr->lastLog.length() > 0)
+        {
+            stringstream ss;
+            ss << tr->getName() << "::" << tr->lastLog;
+            sendLog(tr->logHost, tr->lastLog);
+            tr->lastLog = "";
+        }
     }
     return currentState;
 }

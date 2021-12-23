@@ -13,6 +13,8 @@ public:
     float stepDeg = 0.018;
     bool doDrive = true;
     bool spin = false;
+
+    int gui_goParam = 0;
     
     virtual void setup(string name, trackType type, bool newTrack)
     {
@@ -57,11 +59,27 @@ public:
 
             if (m.getAddress() == "/track/jog/stop") 
                 motor.run(motorIndex, 0, 1000, 1000, 100);
+            
+            if (m.getAddress() == "/track/motor/set")
+            {
+                logHost = m.getRemoteHost();
+                lastLog = "Go to " + ofToString(m.getArgAsInt(1));
+                motor.goAbs(motorIndex, m.getArgAsInt(1), 300 / stepDeg, 1000 / stepDeg, 1000 / stepDeg);
+            }
 
             if (m.getAddress() == "/track/preset")
             {
+                logHost = m.getRemoteHost();
+                lastLog = "Preset.";
                 motor.setRemote(motorIndex, RIO_PRESET, true);
                 motor.setRemote(motorIndex, RIO_PRESET, false);
+            }
+
+            if (m.getAddress() == "/track/alarmReset")
+            {
+                logHost = m.getRemoteHost();
+                lastLog = "Alarm reset";
+                resetAlarm();
             }
         }
 

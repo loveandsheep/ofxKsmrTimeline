@@ -49,6 +49,9 @@ public:
 
     bool checkEdited();
     bool edited = false;
+
+    string logHost = "";
+    string lastLog = "";
 protected:
     string uniqueName;//起動中に使う、変更しても終了まで変更しない名前。主にGUIのIDとして使う
     string myName;

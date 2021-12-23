@@ -309,25 +309,55 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
             motorTrack* trPtr = (motorTrack*)tr.get();
             if (ImGui::InputInt("ID", &trPtr->motorIndex)) trPtr->edited = true;
             if (ImGui::InputFloat("Deg/Step", &trPtr->stepDeg, 0.01, 0.1, "%.4f")) trPtr->edited = true;
+
+            ImGui::PushItemWidth(50);
+            if (ImGui::Button("GO"))
+            {
+                auto & motor = ofxModbusMotorDriver::instance();
+                motor.goAbs(trPtr->motorIndex, trPtr->gui_goParam / trPtr->stepDeg, 
+                    300 / trPtr->stepDeg, 1000 / trPtr->stepDeg, 1000 / trPtr->stepDeg);
+
+                ofxOscMessage mes;
+                ofxOscSender syncSender;
+                syncSender.setup(tm->getSendAddr(), tm->syncPort);
+                mes.setAddress("/track/standby");
+                mes.addStringArg(tr->getName());
+                syncSender.sendMessage(mes);
+            }
+            ImGui::SameLine();
+            ImGui::DragInt("Deg", &trPtr->gui_goParam);
+            ImGui::PopItemWidth();
+
             if (ImGui::Button("Standby"))
             {
                 trPtr->motorStandby(tm->getPassed());
                 ofxOscMessage mes;
+                ofxOscSender syncSender;
+                syncSender.setup(tm->getSendAddr(), tm->syncPort);
                 mes.setAddress("/track/standby");
                 mes.addStringArg(tr->getName());
-                tm->getSender().sendMessage(mes);
+                syncSender.sendMessage(mes);
             }ImGui::SameLine();
+
             if (ImGui::Button("Preset"))
             {
                 ofxOscMessage mes;
+                ofxOscSender syncSender;
+                syncSender.setup(tm->getSendAddr(), tm->syncPort);
                 mes.setAddress("/track/preset");
                 mes.addStringArg(tr->getName());
-                tm->getSender().sendMessage(mes);
+                syncSender.sendMessage(mes);
             }
             ImGui::SameLine();
             if (ImGui::Button("ALMRST"))
             {
                 trPtr->resetAlarm();
+                ofxOscMessage mes;
+                ofxOscSender syncSender;
+                syncSender.setup(tm->getSendAddr(), tm->syncPort);
+                mes.setAddress("/track/alarmReset");
+                mes.addStringArg(tr->getName());
+                syncSender.sendMessage(mes);
             }
             if (ImGui::Button(" - "))
             {
