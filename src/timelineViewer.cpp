@@ -841,6 +841,13 @@ void timelineViewer::mouseReleased(ofMouseEventArgs & e){
     snaped = -1;
 }
 
+void timelineViewer::load(string path)
+{
+    tm->load(path);
+    zoomOut();
+    strcpy(gui_oscAddrInput, tm->getSendAddr().c_str());
+}
+
 void timelineViewer::createNewTrack(string name, trackType tp)
 {
     int cnt = 0;
@@ -969,9 +976,7 @@ void timelineViewer::drawGui()
         
         if (result.bSuccess)
         {
-            tm->load(result.getPath());
-            zoomOut();
-            strcpy(gui_oscAddrInput, tm->getSendAddr().c_str());
+            load(result.getPath());
         }
     }
  

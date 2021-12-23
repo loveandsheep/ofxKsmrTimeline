@@ -38,6 +38,8 @@ public:
     void draw(ofRectangle area);
     void drawGui();
 
+    void load(string path);
+
     void keyPressed(ofKeyEventArgs & key);
     void keyReleased(ofKeyEventArgs & key);
 
