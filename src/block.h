@@ -83,6 +83,21 @@ public:
         return j;
     }
 
+    void setFromJson(ofJson & j_br)
+    {
+        setInherit(j_br["inherit"].get<bool>());
+        setFrom(j_br["from"].get<float>());
+        setTo(j_br["to"].get<float>());
+        eventName = j_br["eventName"].get<string>();
+        setComplement(complementType(j_br["cmplType"].get<int>()));
+        easeInFlag = j_br["easeIn"].get<bool>();
+        easeOutFlag = j_br["easeOut"].get<bool>();
+        if (!j_br["keep"].empty())  setKeep(j_br["keep"].get<bool>());
+        if (!j_br["label"].empty()) label = j_br["label"].get<string>();
+        if (!j_br["accel"].empty()) accel = j_br["accel"].get<float>();
+        if (!j_br["decel"].empty()) decel = j_br["decel"].get<float>();
+    }
+
     complementType const & getComplement(){return cmplType;}
     void setComplement(complementType type){cmplType = type;edited = true;}
 

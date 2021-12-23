@@ -37,6 +37,8 @@ public:
     ofVec3f getVec3f(uint64_t const & time, uint64_t const & duration);
     float   getBlockValue(int numBlock, uint64_t const & time, uint64_t const & duration);
     
+    uint64_t getBlockLength(ofPtr<block> & b, uint64_t duration);
+    int getBlockIndexByBlock(ofPtr<block> & b);
     int getBlockIndexByTime(uint64_t millis);
     int getBlockIndexByLabel(string const & label);
     vector<ofPtr<block> > pickBlocksByTime(uint64_t millis);

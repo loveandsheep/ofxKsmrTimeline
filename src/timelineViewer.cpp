@@ -1,6 +1,6 @@
 ﻿#include "timelineViewer.h"
 
-#if defined(TARGET_WIN32)
+#if defined(_WIN32)
 
 void timelineViewer::setup(ofPtr<timeline> tmPtr) {
     tm = tmPtr;
@@ -461,6 +461,14 @@ float timelineViewer::drawParam(ofPtr<param> pr, ofRectangle area, uint64_t begi
                 ofDrawRectangle(hb - area.getPosition());
             }
 
+            if (copiedBlock == bl[i])
+            {
+                ofColor c = ofColor::fromHex(0xcacf38);
+                c.setBrightness(waving * 80);
+                ofSetColor(c);
+                ofDrawRectangle(hb - area.getPosition());
+            }
+
             // ホバー中の描画
             if (hoverBlock == bl[i])
             {
@@ -675,12 +683,7 @@ void timelineViewer::keyPressed(ofKeyEventArgs & key){
                 }
             }
         }
-
-        peekHeight.reset();
-        hoverParam.reset();
-        hoverBlock.reset();
-        selBlocks.clear();
-        selParentParam.clear();
+        resetSelectedItems();
     }
 
     if (key.key == OF_KEY_PAGE_UP)
@@ -701,7 +704,65 @@ void timelineViewer::keyPressed(ofKeyEventArgs & key){
         zoomOut();
     }
 
+    if ((key.keycode == 67) && ofGetKeyPressed(OF_KEY_CONTROL))
+    {
+        if (selBlocks.size() > 0) 
+        {
+            copiedBlock = selBlocks[0];
+            copiedParentParam = selParentParam[0];
+        }
+    }
 
+    if (key.keycode == 86 && ofGetKeyPressed(OF_KEY_CONTROL))//コピペ処理
+    {
+        if (copiedBlock && hoverParam)
+        {
+            uint64_t targTime = ofMap(ofGetMouseX(), seekLeft, seekLeft + seekWidth, view_begin, view_end);
+            int idx = hoverParam->addKeyPoint(targTime);
+            int bid = copiedParentParam->getBlockIndexByBlock(copiedBlock);
+            
+            vector<ofPtr<block> > dst = hoverParam->pickBlocks(idx);
+            vector<ofPtr<block> > src = copiedParentParam->pickBlocks(bid);
+
+            int src_length = copiedParentParam->getBlockLength(src[0], tm->getDuration());
+            int dst_length = hoverParam->getBlockLength(dst[0], tm->getDuration());
+            if (dst_length > src_length)
+            {
+                int keeper = hoverParam->addKeyPoint(targTime + src_length);
+                vector<ofPtr<block> > kps = hoverParam->pickBlocks(keeper);
+                for (auto & k : kps)
+                {
+                    k->setKeep(true);
+                }
+            }
+
+            for (int i = 0;i < MIN(dst.size(), src.size());i++)
+            {
+                dst[i]->setFromJson(src[i]->getJsonData());
+            }
+
+            hoverParam->refleshInherit();
+
+            selBlocks.clear();
+            selParentParam.clear();
+            selBlocks.push_back(dst[0]);
+            selParentParam.push_back(hoverParam);
+        }
+    }
+
+
+}
+
+void timelineViewer::resetSelectedItems()
+{
+    peekHeight.reset();
+    hoverTrack.reset();
+    hoverParam.reset();
+    hoverBlock.reset();
+    copiedBlock.reset();
+    copiedParentParam.reset();
+    selBlocks.clear();
+    selParentParam.clear();
 }
 
 void timelineViewer::keyReleased(ofKeyEventArgs & key){}
@@ -735,7 +796,7 @@ void timelineViewer::mousePressed(ofMouseEventArgs & e)
         return;
     }
 
-    if (ofGetElapsedTimeMillis() - doubleClTimer < 300)//ダブルクリック
+    if (ofGetElapsedTimeMillis() - doubleClTimer < 180)//ダブルクリック
     {
         if (hoverParam)
         {
@@ -748,16 +809,21 @@ void timelineViewer::mousePressed(ofMouseEventArgs & e)
     {
         if (!guiHovered)
         {
-            selBlocks.clear();
-            selParentParam.clear();
+            if (!ofGetKeyPressed(OF_KEY_SHIFT))
+            {
+                selBlocks.clear();
+                selParentParam.clear();
+            }
             if (hoverBlock)
             {
-                selBlocks.push_back(hoverBlock);
-                selParentParam.push_back(hoverParam);
                 //Shiftキー複数選択(追々実装する)
-                // bool exist = false;
-                // for (auto & b : selBlocks) if (b == hoverBlock) exist = true;
-                // if (!exist) selBlocks.push_back();
+                bool exist = false;
+                for (auto & b : selBlocks) if (b == hoverBlock) exist = true;
+                if (!exist) 
+                {
+                    selBlocks.push_back(hoverBlock);
+                    selParentParam.push_back(hoverParam);
+                }
             }
             doubleClTimer = ofGetElapsedTimeMillis();
         }
@@ -804,12 +870,14 @@ void timelineViewer::mouseDragged(ofMouseEventArgs & e)
         //キーポイントの調整
         if (!handToolFlag && hoverParam)
         {
+            int count = 0;
             for (auto & b : selBlocks)
             {
-                snaped = hoverParam->moveKeyPoint(b, targTime - prevTime, 
+                snaped = selParentParam[count]->moveKeyPoint(b, targTime - prevTime, 
                     snapPoints, 
                     MAX(1,ofMap(5, 0, seekWidth, 0, view_end - view_begin))
                 );
+                count++;
             }
         }
 
@@ -1170,7 +1238,6 @@ void timelineViewer::drawParameterGui(ofPtr<block> & b, ofPtr<param> & p)
             for (int i = 0;i < 4;i++)
                 bs[i]->setFrom(guiColor_from[i]);
         }
-
     }
 
 
@@ -1289,12 +1356,7 @@ void timelineViewer::drawParameterGui(ofPtr<block> & b, ofPtr<param> & p)
 
 void timelineViewer::removeTrack(ofPtr<trackBase> const & tr)
 {
-    peekHeight.reset();
-    hoverTrack.reset();
-    hoverParam.reset();
-    hoverBlock.reset();
-    selBlocks.clear();
-    selParentParam.clear();
+    resetSelectedItems();
 
     tm->removeTrack(tr->getName());
 }

@@ -457,17 +457,7 @@ void timeline::setFromJson(ofJson j)
                         {
                             auto & j_br = j_pr["blocks"][o][j];
                             auto & b = params[i]->getBlocks(o)[j];
-                            b->setInherit(j_br["inherit"].get<bool>());
-                            if (!j_br["keep"].empty()) b->setKeep(j_br["keep"].get<bool>());
-                            b->setFrom(j_br["from"].get<float>());
-                            b->setTo(j_br["to"].get<float>());
-                            b->eventName = j_br["eventName"].get<string>();
-                            b->setComplement(complementType(j_br["cmplType"].get<int>()));
-                            b->easeInFlag = j_br["easeIn"].get<bool>();
-                            b->easeOutFlag = j_br["easeOut"].get<bool>();
-                            if (!j_br["label"].empty()) b->label = j_br["label"].get<string>();
-                            if (!j_br["accel"].empty()) b->accel = j_br["accel"].get<float>();
-                            if (!j_br["decel"].empty()) b->decel = j_br["decel"].get<float>();
+                            b->setFromJson(j_br);
                         }
                     }
                 }
