@@ -110,7 +110,7 @@ timelineState const & timeline::update() {
         {
             stringstream ss;
             ss << tr->getName() << "::" << tr->lastLog;
-            sendLog(tr->logHost, tr->lastLog);
+            sendLog(tr->logHost, ss.str());
             tr->lastLog = "";
         }
     }
@@ -188,7 +188,7 @@ void timeline::receivedMessage(ofxOscMessage & m)
     if (m.getAddress() == "/json/get")
     {
         sendSyncJsonData(m.getRemoteHost(), m.getArgAsInt(0));
-        sendLog(m.getRemoteHost(), "[sync] save remote 'main.json'");
+        sendLog(m.getRemoteHost(), "[sync] receive Get Request.");
     } 
 
     if (m.getAddress() == "/play")
