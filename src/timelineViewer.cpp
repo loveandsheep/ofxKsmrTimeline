@@ -320,8 +320,9 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
                 ofxOscMessage mes;
                 ofxOscSender syncSender;
                 syncSender.setup(tm->getSendAddr(), tm->syncPort);
-                mes.setAddress("/track/standby");
+                mes.setAddress("/track/motor/set");
                 mes.addStringArg(tr->getName());
+                mes.addIntArg(trPtr->gui_goParam);
                 syncSender.sendMessage(mes);
             }
             ImGui::SameLine();
