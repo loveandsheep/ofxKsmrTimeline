@@ -83,6 +83,7 @@ public:
         timelineSyncBase::play(byMaster);
         ofxOscMessage m;
         m.setAddress("/play");
+        m.addStringArg(master->getCurrentChapter()->name);
         sender.sendMessage(m);
     };
     
@@ -93,6 +94,7 @@ public:
         ofxOscMessage m;
         m.setAddress("/pause");
         m.addBoolArg(b);
+        m.addStringArg(master->getCurrentChapter()->name);
         sender.sendMessage(m);
     };
 
@@ -113,6 +115,7 @@ public:
         ofxOscMessage m;
         m.setAddress("/seek");
         m.addInt64Arg(millis);
+        m.addStringArg(master->getCurrentChapter()->name);
         sender.sendMessage(m);
     };
 

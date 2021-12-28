@@ -194,6 +194,9 @@ void timeline::receivedMessage(ofxOscMessage & m)
     if (m.getAddress() == "/play")
     {
         play();
+        if (m.getArgAsString(0) != getCurrentChapter()->name) 
+            setChapter(m.getArgAsString(0));
+
         sendLog(m.getRemoteHost(), "[sync] play.");
     }
     if (m.getAddress() == "/stop")
@@ -203,6 +206,9 @@ void timeline::receivedMessage(ofxOscMessage & m)
     }
     if (m.getAddress() == "/seek")
     {
+        if (m.getArgAsString(1) != getCurrentChapter()->name) 
+            setChapter(m.getArgAsString(1));
+
         setPositionByMillis(m.getArgAsInt64(0));
         sendLog(m.getRemoteHost(), "[sync] seek to :" + ofToString(m.getArgAsInt64(0)));
     }
@@ -210,6 +216,10 @@ void timeline::receivedMessage(ofxOscMessage & m)
     {
         bool b = m.getArgAsBool(0);
         setPause(b);
+
+        if (m.getArgAsString(1) != getCurrentChapter()->name) 
+            setChapter(m.getArgAsString(1));
+
         sendLog(m.getRemoteHost(), string("[sync] pause :") + (b ? "ON" : "OFF"));
     }
     if (m.getAddress() == "/chapter") 
@@ -590,6 +600,7 @@ void timeline::setChapter(string name)
     for (int i = 0;i < chapters.size();i++)
     {
         if (chapters[i]->name == name) setChapter(i);
+        cout << "set Chapter :" << name << endl;
     }
 }
 
