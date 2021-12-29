@@ -2,6 +2,7 @@
 #include "ofMain.h"
 #include "./track.h"
 #include "./motorTrack.h"
+#include "./motorEventTrack.h"
 #include "ofxOsc.h"
 
 class timelineSyncBase;

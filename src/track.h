@@ -16,6 +16,7 @@ enum trackType {
     TRACK_EVENT,
     TRACK_INHERITANCE,
     TRACK_JSONSTREAM,
+    TRACK_MOTOREVENT,
 };
 
 // トラックは複数のparamを持つ
@@ -33,6 +34,7 @@ public:
     ofPtr<param> getParam(string name);
     ofPtr<param> getParam(int index);
     vector<ofPtr<param> > & getParamsRef(){return params;}
+    tm_event getEventParameter(timelineState state, uint64_t const & passed, uint64_t const & duration, int paramIndex = 0, int time = -1, int callOrigin = 0);
     string getName(){return myName;}
     string getUniqueName(){return uniqueName;}
     void setName(string name){myName = name;};
@@ -46,6 +48,8 @@ public:
 
     static const int NUM_ORIGIN = 32;
     int eventCallOrigin[NUM_ORIGIN] = {0};
+    // イベントの呼び出し元32番まで
+    // デフォルト(ofAppとか)が0、timeline本体が1
 
     bool checkEdited();
     bool edited = false;

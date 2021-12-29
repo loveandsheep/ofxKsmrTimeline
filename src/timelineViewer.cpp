@@ -1011,6 +1011,8 @@ void timelineViewer::drawGui()
     if (ImGui::Button("Json")) createNewTrack("json", TRACK_JSONSTREAM);
 
     if (ImGui::Button("Motor")) createNewTrack("motor", TRACK_MOTOR);
+    ImGui::SameLine();
+    if (ImGui::Button("MotorCommand")) createNewTrack("mot_Cmd", TRACK_MOTOREVENT);
     
     ImGui::Text(" \n=== Chapter ===");
     vector<string> chapterNames = tm->getChapterNames();

@@ -354,19 +354,14 @@ timelineEventArgs & timeline::getTimelineEvArg()
 ofPtr<trackBase> timeline::addTrack(string name, trackType tp, bool newTrack)
 {
     ofPtr<trackBase> nt;
-    if (tp == TRACK_MOTOR)
-    {
-        nt = make_shared<motorTrack>();
-        nt->setup(name, tp, newTrack);
-        getCurrentChapter()->tracks.push_back(nt);
-    }
-    else
-    {
-        nt = make_shared<trackBase>();
-        nt->setup(name, tp, newTrack);
-        getCurrentChapter()->tracks.push_back(nt);
-    }
 
+    if (tp == TRACK_MOTOR) nt = make_shared<motorTrack>();
+    else if (tp == TRACK_MOTOREVENT) nt = make_shared<motorEventTrack>();
+    else nt = make_shared<trackBase>();
+
+    nt->setup(name, tp, newTrack);
+    getCurrentChapter()->tracks.push_back(nt);
+    
     return nt;
 }
 
