@@ -304,12 +304,22 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
             }
         }
 
+        if (tr->getType() == TRACK_MOTOREVENT)
+        {
+            motorEventTrack* trPtr = (motorEventTrack*)tr.get();
+            if (ImGui::InputInt("ID", &trPtr->motorIndex)) trPtr->edited = true;
+            if (ImGui::InputFloat("Deg/Step", &trPtr->stepDeg, 0.01, 0.1, "%.4f")) trPtr->edited = true;
+            if (ImGui::InputInt("Speed", &trPtr->p_speed)) trPtr->edited = true;
+            if (ImGui::InputInt("Accel", &trPtr->p_accel)) trPtr->edited = true;
+            if (ImGui::InputInt("Decel", &trPtr->p_decel)) trPtr->edited = true;
+        }
+
         if (tr->getType() == TRACK_MOTOR)
         {
             motorTrack* trPtr = (motorTrack*)tr.get();
             if (ImGui::InputInt("ID", &trPtr->motorIndex)) trPtr->edited = true;
             if (ImGui::InputFloat("Deg/Step", &trPtr->stepDeg, 0.01, 0.1, "%.4f")) trPtr->edited = true;
-
+        
             ImGui::PushItemWidth(50);
             if (ImGui::Button("GO"))
             {

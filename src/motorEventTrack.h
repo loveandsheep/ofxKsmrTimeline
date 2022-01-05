@@ -39,9 +39,23 @@ public:
 			if (ev.label.substr(0, 4) == "rnd:")
 			{
 				float angle = ofToFloat(ev.label.substr(4));
-				cout << "angle Round :" << angle;
 				ofxModbusMotorDriver::instance().roundNear(motorIndex,
 					angle / stepDeg, p_speed / stepDeg, p_accel / stepDeg, p_decel / stepDeg);
+			}
+			if (ev.label.substr(0, 4) == "spd:")
+			{
+				float spd = ofToFloat(ev.label.substr(4));
+				p_speed = spd;
+			}
+			if (ev.label.substr(0, 4) == "acc:")
+			{
+				float acc = ofToFloat(ev.label.substr(4));
+				p_accel = acc;
+			}
+			if (ev.label.substr(0, 4) == "dec:")
+			{
+				float dec = ofToFloat(ev.label.substr(4));
+				p_decel = dec;
 			}
 		}
 	}
@@ -51,6 +65,10 @@ public:
         if (!j["drive"].empty()) doDrive = j["drive"].get<bool>();
         if (!j["motorID"].empty()) motorIndex = j["motorID"].get<int>();
         if (!j["stepDeg"].empty()) stepDeg = j["stepDeg"].get<float>();
+		
+		setJsonParameter(j, "defSpeed", p_speed);
+		setJsonParameter(j, "defAccel", p_accel);
+		setJsonParameter(j, "defDecel", p_decel);
     }
 
     virtual ofJson getJsonData(){
@@ -62,6 +80,9 @@ public:
         j["drive"] = doDrive;
         j["motorID"] = motorIndex;
         j["stepDeg"] = stepDeg;
+		j["defSpeed"] = p_speed;
+		j["defAccel"] = p_accel;
+		j["defDecel"] = p_decel;
 
         for (auto & p : params)
             j["params"].push_back(p->getJsonData());

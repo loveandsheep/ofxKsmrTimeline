@@ -29,7 +29,6 @@ public:
     virtual void controlMessage(ofxOscMessage & m, uint64_t passed, uint64_t duration){};
     //
 
-    //
     trackType const & getType(){return myType;}
     ofPtr<param> getParam(string name);
     ofPtr<param> getParam(int index);
@@ -56,6 +55,11 @@ public:
 
     string logHost = "";
     string lastLog = "";
+
+    template <typename T> void setJsonParameter(ofJson & j, string key, T & param)
+    {
+        if (!j[key].empty()) param = j[key].get<T>();  
+    }
 protected:
     string uniqueName;//起動中に使う、変更しても終了まで変更しない名前。主にGUIのIDとして使う
     string myName;
