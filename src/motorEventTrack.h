@@ -13,14 +13,16 @@ public:
     bool doDrive = true;
 	int gui_goParam = 0;
 
+	int p_speed = 500;
+	int p_accel = 500;
+	int p_decel = 500;
+
 	virtual void setup(string name, trackType type, bool newTrack)
 	{
-		cout << "called motorEvent setup" << endl;
 		uniqueName = myName = name;
 		myType = type;
 		if (type == TRACK_MOTOREVENT)
 		{
-			cout << "make param"	 << endl;
 			auto np = make_shared<param>();
 			np->setType(PTYPE_EVENT);
 			params.push_back(np);
@@ -31,14 +33,16 @@ public:
 
 	virtual void update(timelineState state, uint64_t const & passed, uint64_t const & duration)
 	{
-		if (state == STATE_PLAYING)
+		tm_event ev = getEventParameter(state, passed, duration, 0, -1, 2);
+		if (ev.label.length() > 0)
 		{
-			tm_event ev = getEventParameter(state, passed, duration, 0, -1, 2);
-			if (ev.label.length() > 0)
+			if (ev.label.substr(0, 4) == "rnd:")
 			{
-				cout << "motorEvent :" << ev.label << endl;
+				float angle = ofToFloat(ev.label.substr(4));
+				cout << "angle Round :" << angle;
+				ofxModbusMotorDriver::instance().roundNear(motorIndex,
+					angle / stepDeg, p_speed / stepDeg, p_accel / stepDeg, p_decel / stepDeg);
 			}
-			
 		}
 	}
 

@@ -315,7 +315,7 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
             {
                 auto & motor = ofxModbusMotorDriver::instance();
                 motor.goAbs(trPtr->motorIndex, trPtr->gui_goParam / trPtr->stepDeg, 
-                    300 / trPtr->stepDeg, 1000 / trPtr->stepDeg, 1000 / trPtr->stepDeg);
+                    50 / trPtr->stepDeg, 100 / trPtr->stepDeg, 100 / trPtr->stepDeg);
 
                 ofxOscMessage mes;
                 ofxOscSender syncSender;
