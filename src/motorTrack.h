@@ -64,7 +64,7 @@ public:
             {
                 logHost = m.getRemoteHost();
                 lastLog = "Go to " + ofToString(m.getArgAsInt(1));
-                motor.goAbs(motorIndex, m.getArgAsInt(1) / stepDeg, 300 / stepDeg, 1000 / stepDeg, 1000 / stepDeg);
+                motor.goAbs(motorIndex, m.getArgAsInt(1) / stepDeg, 50 / stepDeg, 100 / stepDeg, 100 / stepDeg);
             }
 
             if (m.getAddress() == "/track/preset")
