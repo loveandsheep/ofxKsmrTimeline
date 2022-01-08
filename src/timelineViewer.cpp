@@ -1,6 +1,6 @@
 ﻿#include "timelineViewer.h"
 
-#if defined(TARGET_WIN32)
+#if defined(_WIN32)
 
 void timelineViewer::setup(ofPtr<timeline> tmPtr) {
     tm = tmPtr;
@@ -39,7 +39,7 @@ void timelineViewer::draw(ofRectangle area) {
     
     area.height = heightSum;
 
-    ofSetHexColor(0x768491);
+    ofSetColor(tm->getCurrentChapter()->bgColor);
     ofDrawRectangle(area);
     isEditorHovered = area.inside(ofGetMouseX(), ofGetMouseY());
     
@@ -304,30 +304,61 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
             }
         }
 
+        if (tr->getType() == TRACK_MOTOREVENT)
+        {
+            motorEventTrack* trPtr = (motorEventTrack*)tr.get();
+            if (ImGui::InputInt("ID", &trPtr->motorIndex)) trPtr->edited = true;
+            if (ImGui::InputFloat("Deg/Step", &trPtr->stepDeg, 0.01, 0.1, "%.4f")) trPtr->edited = true;
+            if (ImGui::InputInt("Speed", &trPtr->p_speed)) trPtr->edited = true;
+            if (ImGui::InputInt("Accel", &trPtr->p_accel)) trPtr->edited = true;
+            if (ImGui::InputInt("Decel", &trPtr->p_decel)) trPtr->edited = true;
+        }
+
         if (tr->getType() == TRACK_MOTOR)
         {
             motorTrack* trPtr = (motorTrack*)tr.get();
             if (ImGui::InputInt("ID", &trPtr->motorIndex)) trPtr->edited = true;
             if (ImGui::InputFloat("Deg/Step", &trPtr->stepDeg, 0.01, 0.1, "%.4f")) trPtr->edited = true;
+        
+            ImGui::PushItemWidth(50);
+            if (ImGui::Button("GO"))
+            {
+                auto & motor = ofxModbusMotorDriver::instance();
+                motor.goAbs(trPtr->motorIndex, trPtr->gui_goParam / trPtr->stepDeg, 
+                    50 / trPtr->stepDeg, 100 / trPtr->stepDeg, 100 / trPtr->stepDeg);
+
+                ofxOscMessage mes;
+                ofxOscSender syncSender;
+                syncSender.setup(tm->getSendAddr(), tm->syncPort);
+                mes.setAddress("/track/motor/set");
+                mes.addStringArg(tr->getName());
+                mes.addIntArg(trPtr->gui_goParam);
+                syncSender.sendMessage(mes);
+            }
+            ImGui::SameLine();
+            ImGui::DragInt("Deg", &trPtr->gui_goParam);
+            ImGui::PopItemWidth();
+
             if (ImGui::Button("Standby"))
             {
                 trPtr->motorStandby(tm->getPassed());
                 ofxOscMessage mes;
+                ofxOscSender syncSender;
+                syncSender.setup(tm->getSendAddr(), tm->syncPort);
                 mes.setAddress("/track/standby");
                 mes.addStringArg(tr->getName());
-                tm->getSender().sendMessage(mes);
-            }ImGui::SameLine();
-            if (ImGui::Button("Preset"))
-            {
-                ofxOscMessage mes;
-                mes.setAddress("/track/preset");
-                mes.addStringArg(tr->getName());
-                tm->getSender().sendMessage(mes);
+                syncSender.sendMessage(mes);
             }
             ImGui::SameLine();
             if (ImGui::Button("ALMRST"))
             {
                 trPtr->resetAlarm();
+                ofxOscMessage mes;
+                ofxOscSender syncSender;
+                syncSender.setup(tm->getSendAddr(), tm->syncPort);
+                mes.setAddress("/track/alarmReset");
+                mes.addStringArg(tr->getName());
+                syncSender.sendMessage(mes);
             }
             if (ImGui::Button(" - "))
             {
@@ -353,6 +384,17 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
             ImGui::SameLine();
             if (ImGui::Checkbox("Drive", &trPtr->doDrive)) trPtr->edited = true;
             if (ImGui::Checkbox("Spin", &trPtr->spin)) trPtr->edited = true;
+            ImGui::SameLine();
+
+            if (ImGui::Button("Preset"))
+            {
+                ofxOscMessage mes;
+                ofxOscSender syncSender;
+                syncSender.setup(tm->getSendAddr(), tm->syncPort);
+                mes.setAddress("/track/preset");
+                mes.addStringArg(tr->getName());
+                syncSender.sendMessage(mes);
+            }
         }
 
     }
@@ -424,6 +466,14 @@ float timelineViewer::drawParam(ofPtr<param> pr, ofRectangle area, uint64_t begi
             if (blockSelected)
             {
                 ofColor c = ofColor::fromHex(0x2e0310);
+                c.setBrightness(waving * 80);
+                ofSetColor(c);
+                ofDrawRectangle(hb - area.getPosition());
+            }
+
+            if (copiedBlock == bl[i])
+            {
+                ofColor c = ofColor::fromHex(0xcacf38);
                 c.setBrightness(waving * 80);
                 ofSetColor(c);
                 ofDrawRectangle(hb - area.getPosition());
@@ -643,12 +693,7 @@ void timelineViewer::keyPressed(ofKeyEventArgs & key){
                 }
             }
         }
-
-        peekHeight.reset();
-        hoverParam.reset();
-        hoverBlock.reset();
-        selBlocks.clear();
-        selParentParam.clear();
+        resetSelectedItems();
     }
 
     if (key.key == OF_KEY_PAGE_UP)
@@ -669,7 +714,65 @@ void timelineViewer::keyPressed(ofKeyEventArgs & key){
         zoomOut();
     }
 
+    if ((key.keycode == 67) && ofGetKeyPressed(OF_KEY_CONTROL))
+    {
+        if (selBlocks.size() > 0) 
+        {
+            copiedBlock = selBlocks[0];
+            copiedParentParam = selParentParam[0];
+        }
+    }
 
+    if (key.keycode == 86 && ofGetKeyPressed(OF_KEY_CONTROL))//コピペ処理
+    {
+        if (copiedBlock && hoverParam)
+        {
+            uint64_t targTime = ofMap(ofGetMouseX(), seekLeft, seekLeft + seekWidth, view_begin, view_end);
+            int idx = hoverParam->addKeyPoint(targTime);
+            int bid = copiedParentParam->getBlockIndexByBlock(copiedBlock);
+            
+            vector<ofPtr<block> > dst = hoverParam->pickBlocks(idx);
+            vector<ofPtr<block> > src = copiedParentParam->pickBlocks(bid);
+
+            int src_length = copiedParentParam->getBlockLength(src[0], tm->getDuration());
+            int dst_length = hoverParam->getBlockLength(dst[0], tm->getDuration());
+            if (dst_length > src_length)
+            {
+                int keeper = hoverParam->addKeyPoint(targTime + src_length);
+                vector<ofPtr<block> > kps = hoverParam->pickBlocks(keeper);
+                for (auto & k : kps)
+                {
+                    k->setKeep(true);
+                }
+            }
+
+            for (int i = 0;i < MIN(dst.size(), src.size());i++)
+            {
+                dst[i]->setFromJson(src[i]->getJsonData());
+            }
+
+            hoverParam->refleshInherit();
+
+            selBlocks.clear();
+            selParentParam.clear();
+            selBlocks.push_back(dst[0]);
+            selParentParam.push_back(hoverParam);
+        }
+    }
+
+
+}
+
+void timelineViewer::resetSelectedItems()
+{
+    peekHeight.reset();
+    hoverTrack.reset();
+    hoverParam.reset();
+    hoverBlock.reset();
+    copiedBlock.reset();
+    copiedParentParam.reset();
+    selBlocks.clear();
+    selParentParam.clear();
 }
 
 void timelineViewer::keyReleased(ofKeyEventArgs & key){}
@@ -703,7 +806,7 @@ void timelineViewer::mousePressed(ofMouseEventArgs & e)
         return;
     }
 
-    if (ofGetElapsedTimeMillis() - doubleClTimer < 300)//ダブルクリック
+    if (ofGetElapsedTimeMillis() - doubleClTimer < 180)//ダブルクリック
     {
         if (hoverParam)
         {
@@ -716,16 +819,21 @@ void timelineViewer::mousePressed(ofMouseEventArgs & e)
     {
         if (!guiHovered)
         {
-            selBlocks.clear();
-            selParentParam.clear();
+            if (!ofGetKeyPressed(OF_KEY_SHIFT))
+            {
+                selBlocks.clear();
+                selParentParam.clear();
+            }
             if (hoverBlock)
             {
-                selBlocks.push_back(hoverBlock);
-                selParentParam.push_back(hoverParam);
                 //Shiftキー複数選択(追々実装する)
-                // bool exist = false;
-                // for (auto & b : selBlocks) if (b == hoverBlock) exist = true;
-                // if (!exist) selBlocks.push_back();
+                bool exist = false;
+                for (auto & b : selBlocks) if (b == hoverBlock) exist = true;
+                if (!exist) 
+                {
+                    selBlocks.push_back(hoverBlock);
+                    selParentParam.push_back(hoverParam);
+                }
             }
             doubleClTimer = ofGetElapsedTimeMillis();
         }
@@ -772,12 +880,14 @@ void timelineViewer::mouseDragged(ofMouseEventArgs & e)
         //キーポイントの調整
         if (!handToolFlag && hoverParam)
         {
+            int count = 0;
             for (auto & b : selBlocks)
             {
-                snaped = hoverParam->moveKeyPoint(b, targTime - prevTime, 
+                snaped = selParentParam[count]->moveKeyPoint(b, targTime - prevTime, 
                     snapPoints, 
                     MAX(1,ofMap(5, 0, seekWidth, 0, view_end - view_begin))
                 );
+                count++;
             }
         }
 
@@ -808,6 +918,13 @@ void timelineViewer::mouseDragged(ofMouseEventArgs & e)
 void timelineViewer::mouseReleased(ofMouseEventArgs & e){
     handToolFlag = false;
     snaped = -1;
+}
+
+void timelineViewer::load(string path)
+{
+    tm->load(path);
+    zoomOut();
+    strcpy(gui_oscAddrInput, tm->getSendAddr().c_str());
 }
 
 void timelineViewer::createNewTrack(string name, trackType tp)
@@ -844,10 +961,11 @@ void timelineViewer::drawGui()
     if (ImGui::Button("UnFold")) for (auto & t : tm->getTracks()) t->fold = false;
     
     ImGui::Text("===Sync===");
-    string info = "Dest :" + tm->getSendAddr() + "\n";
-    info += "Port :" + ofToString(tm->getSendPort()) + "::" + ofToString(tm->getReceiverPort()) + "\n";
+    stringstream info;
+    info << "Hash : 0x" << hex << tm->getHash() << endl;
+    info << "Dest :" << tm->getSendAddr() << endl;
 
-    ImGui::Text(info.c_str());
+    ImGui::Text(info.str().c_str());
     ImGui::PushStyleColor(ImGuiCol_Button, ofFloatColor::fromHsb(tm->edited ? 0.1 : 0.4, 0.5, 0.5));
     if (ImGui::Button("Sync data")) 
     {
@@ -862,10 +980,9 @@ void timelineViewer::drawGui()
         ofxOscSender sender;
         ofxOscMessage m;
         m.setAddress("/json/get");
-        m.addIntArg(tm->getReceiverPort());
-        sender.setup(tm->getSendAddr(), tm->getSendPort());
+        m.addIntArg(tm->syncPort);
+        sender.setup(tm->getSendAddr(), tm->syncPort);
         sender.sendMessage(m);
-        cout << "Get request to " << tm->getSendAddr() << "::" << tm->getReceiverPort() << endl;
     }
 
     if (ImGui::Button("Save remote as main.json"))
@@ -874,17 +991,19 @@ void timelineViewer::drawGui()
         ofxOscMessage m;
         m.setAddress("/json/save");
         m.addStringArg("main.json");
-        sender.setup(tm->getSendAddr(), tm->getSendPort());
+        sender.setup(tm->getSendAddr(), tm->syncPort);
         sender.sendMessage(m);
     }
     if (ImGui::Button("Standby All"))
     {
         for (auto & tr : tm->getTracks())
         {
+            ofxOscSender sender;
             ofxOscMessage mes;
             mes.setAddress("/track/standby");
             mes.addStringArg(tr->getName());
-            tm->getSender().sendMessage(mes);
+            sender.setup(tm->getSendAddr(), tm->syncPort);
+            sender.sendMessage(mes);
         }
     }
 
@@ -902,6 +1021,8 @@ void timelineViewer::drawGui()
     if (ImGui::Button("Json")) createNewTrack("json", TRACK_JSONSTREAM);
 
     if (ImGui::Button("Motor")) createNewTrack("motor", TRACK_MOTOR);
+    ImGui::SameLine();
+    if (ImGui::Button("MotorCommand")) createNewTrack("mot_Cmd", TRACK_MOTOREVENT);
     
     ImGui::Text(" \n=== Chapter ===");
     vector<string> chapterNames = tm->getChapterNames();
@@ -916,6 +1037,8 @@ void timelineViewer::drawGui()
         tm->setChapter(gui_chapterIndex);
         zoomOut();
     }
+
+    ImGui::ColorEdit3("chapterBg", &tm->getCurrentChapter()->bgColor[0], ImGuiColorEditFlags_Float);
 
     strcpy(gui_chapterName, tm->getCurrentChapter()->name.c_str());
     if (ImGui::InputText("ChapterName", gui_chapterName, numChapterName))
@@ -934,9 +1057,7 @@ void timelineViewer::drawGui()
         
         if (result.bSuccess)
         {
-            tm->load(result.getPath());
-            zoomOut();
-            strcpy(gui_oscAddrInput, tm->getSendAddr().c_str());
+            load(result.getPath());
         }
     }
  
@@ -1129,7 +1250,6 @@ void timelineViewer::drawParameterGui(ofPtr<block> & b, ofPtr<param> & p)
             for (int i = 0;i < 4;i++)
                 bs[i]->setFrom(guiColor_from[i]);
         }
-
     }
 
 
@@ -1248,12 +1368,7 @@ void timelineViewer::drawParameterGui(ofPtr<block> & b, ofPtr<param> & p)
 
 void timelineViewer::removeTrack(ofPtr<trackBase> const & tr)
 {
-    peekHeight.reset();
-    hoverTrack.reset();
-    hoverParam.reset();
-    hoverBlock.reset();
-    selBlocks.clear();
-    selParentParam.clear();
+    resetSelectedItems();
 
     tm->removeTrack(tr->getName());
 }

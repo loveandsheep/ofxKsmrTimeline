@@ -79,23 +79,28 @@ public:
 
     virtual void play(bool byMaster = false)
     {
+        if (sendHost == "localhost" || sendHost == "127.0.0.1") return;
         timelineSyncBase::play(byMaster);
         ofxOscMessage m;
         m.setAddress("/play");
+        m.addStringArg(master->getCurrentChapter()->name);
         sender.sendMessage(m);
     };
     
     virtual void setPause (bool b, bool byMaster = false)
     {
+        if (sendHost == "localhost" || sendHost == "127.0.0.1") return;
         timelineSyncBase::setPause(b, byMaster);
         ofxOscMessage m;
         m.setAddress("/pause");
         m.addBoolArg(b);
+        m.addStringArg(master->getCurrentChapter()->name);
         sender.sendMessage(m);
     };
 
     virtual void stop (bool byMaster = false)
     {
+        if (sendHost == "localhost" || sendHost == "127.0.0.1") return;
         timelineSyncBase::stop(byMaster);
         ofxOscMessage m;
         m.setAddress("/stop");
@@ -105,15 +110,18 @@ public:
 
     virtual void setPosition(uint64_t millis, bool byMaster = false)
     {
+        if (sendHost == "localhost" || sendHost == "127.0.0.1") return;
         timelineSyncBase::setPosition(millis, byMaster);
         ofxOscMessage m;
         m.setAddress("/seek");
         m.addInt64Arg(millis);
+        m.addStringArg(master->getCurrentChapter()->name);
         sender.sendMessage(m);
     };
 
     virtual void setChapter(int index, bool byMaster = false)
     {
+        if (sendHost == "localhost" || sendHost == "127.0.0.1") return;
         timelineSyncBase::setChapter(index, byMaster);
         ofxOscMessage m;
         m.setAddress("/chapter");

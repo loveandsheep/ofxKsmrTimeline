@@ -2,7 +2,7 @@
 #include "ofConstants.h"
 #include "ofMain.h"
 
-#if defined(TARGET_WIN32)
+#if defined(_WIN32)
 #include "timeline.h"
 #include "imGuiSheepUtil.h"
 
@@ -37,6 +37,8 @@ public:
     void update();
     void draw(ofRectangle area);
     void drawGui();
+
+    void load(string path);
 
     void keyPressed(ofKeyEventArgs & key);
     void keyReleased(ofKeyEventArgs & key);
@@ -98,6 +100,8 @@ protected:
     void stopVideo();
     void syncFromVideo();
 
+    void resetSelectedItems();
+
     ofPtr<tm_videoPlayer> video;
 
     ofPtr<timeline> tm;
@@ -107,9 +111,11 @@ protected:
     ofPtr<block> hoverBlock;
     vector<ofPtr<block> > selBlocks;
     vector<ofPtr<param> > selParentParam;
+    ofPtr<block> copiedBlock;
+    ofPtr<param> copiedParentParam;
     string mouseLock = "free";
     bool handToolFlag = false;//スペースキー移動
-    bool doSnap = true;
+    bool doSnap = false;
 
     static const int foldedHeight = 30;
     ofPtr<block> currentViewBlock;

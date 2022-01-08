@@ -88,3 +88,17 @@ bool trackBase::checkEdited(){
     }
     return ret;
 }
+
+tm_event trackBase::getEventParameter(timelineState state, uint64_t const & passed, uint64_t const & duration, int paramIndex, int time, int callOrigin)
+{
+    if (time < 0) time = passed;
+    tm_event ret = getParamsRef()[paramIndex]->get<tm_event>(time, duration);
+
+    if (eventCallOrigin[callOrigin] != ret.time)
+    {
+        eventCallOrigin[callOrigin] = ret.time;
+
+        if (ret.label != "" && state == STATE_PLAYING) return ret;
+    }
+    return tm_event();
+}

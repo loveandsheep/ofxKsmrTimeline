@@ -83,6 +83,21 @@ public:
         return j;
     }
 
+    void setFromJson(ofJson & j_br)
+    {
+        setInherit(j_br["inherit"].get<bool>());
+        setFrom(j_br["from"].get<float>());
+        setTo(j_br["to"].get<float>());
+        eventName = j_br["eventName"].get<string>();
+        setComplement(complementType(j_br["cmplType"].get<int>()));
+        easeInFlag = j_br["easeIn"].get<bool>();
+        easeOutFlag = j_br["easeOut"].get<bool>();
+        if (!j_br["keep"].empty())  setKeep(j_br["keep"].get<bool>());
+        if (!j_br["label"].empty()) label = j_br["label"].get<string>();
+        if (!j_br["accel"].empty()) accel = j_br["accel"].get<float>();
+        if (!j_br["decel"].empty()) decel = j_br["decel"].get<float>();
+    }
+
     complementType const & getComplement(){return cmplType;}
     void setComplement(complementType type){cmplType = type;edited = true;}
 
@@ -120,8 +135,8 @@ public:
     static const uint8_t EASE_INOUT = 0x3;
 
     bool edited = false;
-    bool easeInFlag = false;
-    bool easeOutFlag = false;
+    bool easeInFlag = true;
+    bool easeOutFlag = true;
 
     string eventName = "newEvent";
     string label = "";
@@ -153,7 +168,7 @@ public:
 
 protected:
     
-    complementType cmplType;
+    complementType cmplType = CMPL_QUAD;
     uint64_t lastLength = 0;
     bool Inherit = true;//継承…fromに前のブロック値を使う
     bool keep = false;

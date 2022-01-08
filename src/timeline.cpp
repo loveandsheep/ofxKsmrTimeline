@@ -3,6 +3,7 @@
 void timeline::setup() {
     sender.setup(sendAddr, sendPort);
     receiver.setup(recvPort);
+    syncRecv.setup(syncPort);
     clear();
 }
 
@@ -12,14 +13,14 @@ void timeline::sendSyncJsonData(string host, int port)
     if (port == 0) port = getSendPort();
 
     ofxOscSender s_sync;
-    s_sync.setup(host, port);
+    ofxOscBundle bundle;
+    s_sync.setup(host, syncPort);
 
     ofJson syncJson = getJsonData();
     syncJson["settings"].erase("osc");
 
-    string dat = syncJson.dump();
-
-    int pieceSize = 100;
+    string  dat = syncJson.dump();
+    int     pieceSize = 100;
 
     for (int i = 0;i <= dat.length() / pieceSize ;i++)
     {
@@ -30,13 +31,15 @@ void timeline::sendSyncJsonData(string host, int port)
         mes.addStringArg(dat.substr(st, ed - st));
         mes.addIntArg(i);
         mes.addIntArg(dat.length() / pieceSize + 1);
-        s_sync.sendMessage(mes);
+
+        bundle.addMessage(mes);
     }
 
     ofxOscMessage joiner;
     joiner.setAddress("/json/set/parse");
 
-    s_sync.sendMessage(joiner);
+    bundle.addMessage(joiner);
+    s_sync.sendBundle(bundle);
 }
 
 void timeline::drawMinimum(int x, int y)
@@ -60,98 +63,14 @@ timelineState const & timeline::update() {
     {
         ofxOscMessage m;
         receiver.getNextMessage(m);
-        cout << "received :" << m.getAddress() << endl;
-        if (m.getAddress().find("/track") != string::npos)
-        {
-            for (auto & tr : getTracks())
-            {
-                tr->controlMessage(m, getPassed(), getDuration());
-            }
-        }
+        receivedMessage(m);
+    }
 
-        if (m.getAddress() == "/error")
-        {
-            lastLog = "err :" + m.getArgAsString(0);
-        }
-        if (m.getAddress() == "/log")
-        {
-            lastLog = "log :" + m.getArgAsString(0);
-        }
-
-        //JSONデータの読み出し
-        if (m.getAddress() == "/json/set")
-        {
-            json_piece.resize(m.getArgAsInt(2));
-            json_piece[m.getArgAsInt(1)] = m.getArgAsString(0);
-        }
-
-        if (m.getAddress() == "/json/set/parse")
-        {
-            string d = "";
-            for (auto & jp : json_piece)
-            {
-                d += jp;
-            }
-            bool parseSuccess = true;
-            try
-            {
-                setFromJson(ofJson::parse(d));
-            }
-            catch(const std::exception& e)
-            {
-                parseSuccess = false;
-                std::cerr << e.what() << '\n';
-                ofxOscSender sender;
-                sender.setup(m.getRemoteHost(), sendPort);
-                ofxOscMessage log;
-                log.setAddress("/error");
-                log.addStringArg("Sync failed.");
-                sender.sendMessage(log);
-                cout << "parse error." << endl;
-            }
-            if (parseSuccess)
-            {
-                sender.setup(m.getRemoteHost(), sendPort);
-                ofxOscMessage log;
-                log.setAddress("/log");
-                log.addStringArg("Sync success.");
-                sender.sendMessage(log);
-                cout << "parse success." << endl;
-            }
-        }
-
-        if (m.getAddress() == "/json/save")
-        {
-            save(m.getArgAsString(0));
-        }
-
-        // ip-Syncモードで送るsyncシグナル
-        // 現在時刻その他の情報を返す
-        if (m.getAddress() == "/sync")
-        {            
-            ofxOscSender repSender;
-            ofxOscMessage reply;
-            repSender.setup(m.getRemoteHost(), sendPort);
-            reply.setAddress("/return/sync");
-            reply.addIntArg(getPassed());
-            repSender.sendMessage(reply);
-        }
-
-        if (m.getAddress() == "/json/get")
-        {
-            sendSyncJsonData(m.getRemoteHost(), m.getArgAsInt(0));
-            cout << "Send to :" << m.getRemoteHost() << "::" << m.getArgAsInt(0) << endl;
-        } 
-
-        if (m.getAddress() == "/return/json/get")
-            setFromJson(ofJson::parse(m.getArgAsString(0)));
-
-        if (m.getAddress() == "/play")      play();
-        if (m.getAddress() == "/stop")      stop();
-        if (m.getAddress() == "/seek")      setPositionByMillis(m.getArgAsInt64(0));
-        if (m.getAddress() == "/pause")     setPause(m.getArgAsBool(0));
-        if (m.getAddress() == "/chapter")   setChapter(m.getArgAsInt(0));
-
+    while(syncRecv.hasWaitingMessages())
+    {
+        ofxOscMessage m;
+        syncRecv.getNextMessage(m);
+        receivedMessage(m);
     }
 
     timelineState prev = currentState;
@@ -186,8 +105,136 @@ timelineState const & timeline::update() {
     {
         tr->update(currentState, getPassed(), getDuration());
         edited |= tr->checkEdited();
+
+        if (tr->lastLog.length() > 0)
+        {
+            stringstream ss;
+            ss << tr->getName() << "::" << tr->lastLog;
+            sendLog(tr->logHost, ss.str());
+            tr->lastLog = "";
+        }
     }
     return currentState;
+}
+
+void timeline::receivedMessage(ofxOscMessage & m)
+{
+    if (m.getAddress().find("/track") != string::npos)
+    {
+        for (auto & tr : getTracks())
+        {
+            tr->controlMessage(m, getPassed(), getDuration());
+        }
+    }
+
+    if (m.getAddress() == "/error")
+    {
+        lastLog = "err :" + m.getArgAsString(0);
+    }
+    if (m.getAddress() == "/log")
+    {
+        lastLog = "log :" + m.getArgAsString(0);
+    }
+
+    //JSONデータの読み出し
+    if (m.getAddress() == "/json/set")
+    {
+        json_piece.resize(m.getArgAsInt(2));
+        json_piece[m.getArgAsInt(1)] = m.getArgAsString(0);
+    }
+
+    if (m.getAddress() == "/json/set/parse")
+    {
+        string d = "";
+        for (auto & jp : json_piece)
+        {
+            d += jp;
+        }
+        bool parseSuccess = true;
+        try
+        {
+            setFromJson(ofJson::parse(d));
+        }
+        catch(const std::exception & e)
+        {
+            sendLog(m.getRemoteHost(), "[sync] sync data error.");
+        }
+        if (parseSuccess)
+        {
+            stringstream ss;
+            ss << "[sync] sync data success\nHash : 0x" << hex << crc16(d.c_str(), d.length());
+            sendLog(m.getRemoteHost(), ss.str());
+        }
+    }
+
+    if (m.getAddress() == "/json/save")
+    {
+        save(m.getArgAsString(0));
+        sendLog(m.getRemoteHost(), "[sync] save remote 'main.json'");
+    }
+
+    // ip-Syncモードで送るsyncシグナル
+    // 現在時刻その他の情報を返す
+    if (m.getAddress() == "/sync")
+    {            
+        ofxOscSender repSender;
+        ofxOscMessage reply;
+        repSender.setup(m.getRemoteHost(), sendPort);
+        reply.setAddress("/return/sync");
+        reply.addIntArg(getPassed());
+        repSender.sendMessage(reply);
+    }
+
+    if (m.getAddress() == "/json/get")
+    {
+        sendSyncJsonData(m.getRemoteHost(), m.getArgAsInt(0));
+        sendLog(m.getRemoteHost(), "[sync] receive Get Request.");
+    } 
+
+    if (m.getAddress() == "/play")
+    {
+        play();
+        if (m.getArgAsString(0) != getCurrentChapter()->name) 
+            setChapter(m.getArgAsString(0));
+
+        sendLog(m.getRemoteHost(), "[sync] play.");
+    }
+    if (m.getAddress() == "/stop")
+    {
+        stop();
+        sendLog(m.getRemoteHost(), "[sync] stop.");
+    }
+    if (m.getAddress() == "/seek")
+    {
+        if (m.getArgAsString(1) != getCurrentChapter()->name) 
+            setChapter(m.getArgAsString(1));
+
+        setPositionByMillis(m.getArgAsInt64(0));
+        sendLog(m.getRemoteHost(), "[sync] seek to :" + ofToString(m.getArgAsInt64(0)));
+    }
+    if (m.getAddress() == "/pause")
+    {
+        bool b = m.getArgAsBool(0);
+        setPause(b);
+
+        if (m.getArgAsString(1) != getCurrentChapter()->name) 
+            setChapter(m.getArgAsString(1));
+
+        sendLog(m.getRemoteHost(), string("[sync] pause :") + (b ? "ON" : "OFF"));
+    }
+    if (m.getAddress() == "/chapter") 
+    {
+        int ci = m.getArgAsInt(0);
+        if (ci < chapters.size())
+        {
+            setChapter(ci);
+            sendLog(m.getRemoteHost(), "[sync] chapter :" + chapters[ci]->name);
+        }
+        else
+        {
+            sendError(m.getRemoteHost(), "[sync] chapter size error");
+        }
+    } 
 }
 
 void timeline::sendOsc()
@@ -307,19 +354,14 @@ timelineEventArgs & timeline::getTimelineEvArg()
 ofPtr<trackBase> timeline::addTrack(string name, trackType tp, bool newTrack)
 {
     ofPtr<trackBase> nt;
-    if (tp == TRACK_MOTOR)
-    {
-        nt = make_shared<motorTrack>();
-        nt->setup(name, tp, newTrack);
-        getCurrentChapter()->tracks.push_back(nt);
-    }
-    else
-    {
-        nt = make_shared<trackBase>();
-        nt->setup(name, tp, newTrack);
-        getCurrentChapter()->tracks.push_back(nt);
-    }
 
+    if (tp == TRACK_MOTOR) nt = make_shared<motorTrack>();
+    else if (tp == TRACK_MOTOREVENT) nt = make_shared<motorEventTrack>();
+    else nt = make_shared<trackBase>();
+
+    nt->setup(name, tp, newTrack);
+    getCurrentChapter()->tracks.push_back(nt);
+    
     return nt;
 }
 
@@ -383,6 +425,13 @@ void timeline::setFromJson(ofJson j)
 
         setDuration(j["duration"].get<int>());
         if (!j["isLoop"].empty()) setIsLoop(j["isLoop"].get<bool>());
+        if (!j["bgColor"].empty())
+        {
+            getCurrentChapter()->bgColor.r = j["bgColor"][0];
+            getCurrentChapter()->bgColor.g = j["bgColor"][1];
+            getCurrentChapter()->bgColor.b = j["bgColor"][2];
+        }
+
 
         //トラックの追加
         for (auto & jtr : j["tracks"])
@@ -413,17 +462,7 @@ void timeline::setFromJson(ofJson j)
                         {
                             auto & j_br = j_pr["blocks"][o][j];
                             auto & b = params[i]->getBlocks(o)[j];
-                            b->setInherit(j_br["inherit"].get<bool>());
-                            if (!j_br["keep"].empty()) b->setKeep(j_br["keep"].get<bool>());
-                            b->setFrom(j_br["from"].get<float>());
-                            b->setTo(j_br["to"].get<float>());
-                            b->eventName = j_br["eventName"].get<string>();
-                            b->setComplement(complementType(j_br["cmplType"].get<int>()));
-                            b->easeInFlag = j_br["easeIn"].get<bool>();
-                            b->easeOutFlag = j_br["easeOut"].get<bool>();
-                            if (!j_br["label"].empty()) b->label = j_br["label"].get<string>();
-                            if (!j_br["accel"].empty()) b->accel = j_br["accel"].get<float>();
-                            if (!j_br["decel"].empty()) b->decel = j_br["decel"].get<float>();
+                            b->setFromJson(j_br);
                         }
                     }
                 }
@@ -457,14 +496,21 @@ ofJson timeline::getJsonData()
     for (auto & c : chapters)
     {
         ofJson chj;
-        cout << "Duration :" << c->name << "::" << c->duration << endl;
         chj["duration"] = c->duration;
         chj["isLoop"] = c->isLoop;
         chj["chapterName"] = c->name;
-
+        chj["bgColor"][0] = c->bgColor.r;
+        chj["bgColor"][1] = c->bgColor.g;
+        chj["bgColor"][2] = c->bgColor.b;
+        
         for (auto & t : c->tracks) chj["tracks"].push_back(t->getJsonData());
         j_tm.push_back(chj);
     }
+
+    ofJson jHash = j;
+    jHash["settings"].erase("osc");
+    string jhs = jHash.dump();
+    jsonHash = crc16(jhs.c_str(), jhs.length());
 
     return j;
 }
@@ -549,6 +595,7 @@ void timeline::setChapter(string name)
     for (int i = 0;i < chapters.size();i++)
     {
         if (chapters[i]->name == name) setChapter(i);
+        cout << "set Chapter :" << name << endl;
     }
 }
 
@@ -591,4 +638,43 @@ vector<string> timeline::getChapterNames()
     vector<string> ret;
     for (auto & c : chapters) ret.push_back(c->name);
     return ret;
+}
+
+void timeline::sendLog(string host, string message)
+{
+    ofxOscSender sender;
+    ofxOscMessage log;
+
+    log.setAddress("/log");
+    log.addStringArg(message);
+
+    sender.setup(host, syncPort);
+    sender.sendMessage(log);
+}
+
+void timeline::sendError(string host, string message)
+{
+    ofxOscSender sender;
+    ofxOscMessage log;
+
+    log.setAddress("/error");
+    log.addStringArg(message);
+
+    sender.setup(host, syncPort);
+    sender.sendMessage(log);
+}
+
+uint16_t timeline::crc16(const char* data, int numByte)
+{
+    uint16_t crc = 0xFFFF;
+    for (int i = 0;i < numByte;i++)
+    {
+        crc ^= data[i];
+        for (int j = 0;j < 8;j++)
+        {
+            if (crc & 1) crc = (crc >> 1) ^ 0xA001;
+            else crc >>= 1;
+        }
+    }
+    return crc;
 }

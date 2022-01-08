@@ -12,6 +12,37 @@ void param::setType(paramType tp)
     if (tp == PTYPE_JSONSTREAM) numUsingBlockLine = 1;
 }
 
+uint64_t param::getBlockLength(ofPtr<block> & b, uint64_t duration) //ブロックの長さを計測
+{
+    int index = 0;
+    for (int i = 0;i < keyPoints.size();i++)
+    {
+        for (int o = 0;o < numUsingBlockLine;o++)
+        {
+            if (blocks[o][i] == b) index = i;
+        }
+    }
+
+    if (index >= keyPoints.size()) return 0;
+    if (index == keyPoints.size() - 1) return duration - keyPoints[index];
+
+    return keyPoints[index + 1] - keyPoints[index];
+}
+
+int param::getBlockIndexByBlock(ofPtr<block> & b)
+{
+    int index = 0;
+    for (int i = 0;i < keyPoints.size();i++)
+    {
+        for (int o = 0;o < numUsingBlockLine;o++)
+        {
+            if (blocks[o][i] == b) index = i;
+        }
+    }
+
+    return index;
+}
+
 int param::getBlockIndexByLabel(string const & label)
 {
     int index = 0;
@@ -139,9 +170,11 @@ int param::addKeyPoint(uint64_t const & time)
     keyPoints.insert(keyPoints.begin() + index, time);
     for (int i = 0;i < numUsingBlockLine;i++)
     {
+        float value = 0.5;
+        if (index > 0 && blocks[i][index - 1]) value = blocks[i][index - 1]->getTo();
         ofPtr<block> nb = make_shared<block>();
-        nb->setFrom(0.0);
-        nb->setTo(0.0);
+        nb->setFrom(value);
+        nb->setTo(value);
         if (i == 3) 
         {
             nb->setFrom(1);

@@ -1,5 +1,10 @@
 #include "track.h"
+
+#define MODBUS
+
+#ifdef MODBUS
 #include "ofxModbusMotorDriver.h"
+#endif
 
 class motorTrack : public trackBase {
 public:
@@ -8,6 +13,8 @@ public:
     float stepDeg = 0.018;
     bool doDrive = true;
     bool spin = false;
+
+    int gui_goParam = 0;
     
     virtual void setup(string name, trackType type, bool newTrack)
     {
@@ -25,15 +32,21 @@ public:
 
     void motorStandby(uint64_t passed)
     {
+        if (spin) return;
+        
         auto p = getParamsRef()[0];
         int  index = p->getBlockIndexByTime(passed);
         auto b = p->pickBlocksByTime(passed)[0];
+#ifdef MODBUS
         ofxModbusMotorDriver::instance().goAbs(motorIndex, b->getTo() / stepDeg,
             30 / stepDeg, 50 / stepDeg, 50 / stepDeg);
+#endif
     }
 
     virtual void controlMessage(ofxOscMessage & m, uint64_t passed, uint64_t duration)
     {
+#ifdef MODBUS
+
         if (m.getArgAsString(0) == getName())
         {
             auto & motor = ofxModbusMotorDriver::instance();
@@ -46,13 +59,31 @@ public:
 
             if (m.getAddress() == "/track/jog/stop") 
                 motor.run(motorIndex, 0, 1000, 1000, 100);
+            
+            if (m.getAddress() == "/track/motor/set")
+            {
+                logHost = m.getRemoteHost();
+                lastLog = "Go to " + ofToString(m.getArgAsInt(1));
+                motor.goAbs(motorIndex, m.getArgAsInt(1) / stepDeg, 300 / stepDeg, 1000 / stepDeg, 1000 / stepDeg);
+            }
 
             if (m.getAddress() == "/track/preset")
             {
+                logHost = m.getRemoteHost();
+                lastLog = "Preset.";
                 motor.setRemote(motorIndex, RIO_PRESET, true);
                 motor.setRemote(motorIndex, RIO_PRESET, false);
             }
+
+            if (m.getAddress() == "/track/alarmReset")
+            {
+                logHost = m.getRemoteHost();
+                lastLog = "Alarm reset";
+                resetAlarm();
+            }
         }
+
+#endif
     }
 
     void resetAlarm()
@@ -85,7 +116,7 @@ public:
                     if (!doDrive) drive = false;
                     if (!spin && b->getComplement() != CMPL_RAMP) drive = false;
                     if (spin && b->getComplement() != CMPL_LINEAR) drive = false;
-
+#ifdef MODBUS
                     if (drive)
                     {
                         if (spin)
@@ -104,7 +135,7 @@ public:
                                 b->decel * 1000 / stepDeg);
                         }
                     }
-
+#endif
                 }
 
                 lastBlock = index;

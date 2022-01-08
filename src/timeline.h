@@ -2,9 +2,18 @@
 #include "ofMain.h"
 #include "./track.h"
 #include "./motorTrack.h"
+#include "./motorEventTrack.h"
 #include "ofxOsc.h"
 
 class timelineSyncBase;
+
+// ポートについて
+// timeline => 任意のアプリ...sendAddr(localhost), sendPort(7000)
+// 任意のアプリ => timeline...recvPort(7000),
+
+// /sync...ip_syncモードの同期メッセージ
+// /json/get...
+// /json/set
 
 class chapter {
 public:
@@ -12,6 +21,7 @@ public:
     uint64_t                    duration = 1000;
     bool                        isLoop = false;
     vector<ofPtr<trackBase> >   tracks;
+    ofFloatColor                bgColor = ofFloatColor(0.46, 0.51, 0.56);
 };
 
 class timeline {
@@ -21,8 +31,13 @@ public:
     void clear(bool completely = false);
     void drawMinimum(int x, int y);
 
-    string lastLog = "";
 
+    string lastLog = "";
+    int syncPort = 7124;
+    void sendLog(string host, string message);
+    void sendError(string host, string message);
+
+    void receivedMessage(ofxOscMessage & m);
     void setFromJson(ofJson data);
     ofJson getJsonData();
 
@@ -135,11 +150,14 @@ public:
     void clearChapter(bool completely = false);
 
     bool edited = false;
+
+    size_t getHash(){return jsonHash;}
 protected:
 
     timelineState currentState;
     ofxOscSender sender;
     ofxOscReceiver receiver;
+    ofxOscReceiver syncRecv;
     string sendAddr = "localhost";
     uint64_t seekOscCheck = 0;
     int sendPort = 7000;
@@ -156,6 +174,8 @@ protected:
 
     string currentPath = "";
     string currentFileName = "";
+    uint16_t jsonHash = 0;
+    uint16_t crc16(const char* data, int numByte);
 };
 
 //イベントのgetParameterのみ特殊化
