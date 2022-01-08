@@ -188,7 +188,10 @@ void timeline::receivedMessage(ofxOscMessage & m)
     if (m.getAddress() == "/json/get")
     {
         sendSyncJsonData(m.getRemoteHost(), m.getArgAsInt(0));
-        sendLog(m.getRemoteHost(), "[sync] receive Get Request.");
+        stringstream ss;
+        ss << "[sync] receive Get Request. ";
+        ss << m.getRemoteHost() << "::" << m.getArgAsInt(0);
+        sendLog(m.getRemoteHost(), ss.str());
     } 
 
     if (m.getAddress() == "/play")
