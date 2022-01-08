@@ -307,11 +307,13 @@ float timelineViewer::drawTrack(ofPtr<trackBase> tr, ofRectangle area, uint64_t 
         if (tr->getType() == TRACK_MOTOREVENT)
         {
             motorEventTrack* trPtr = (motorEventTrack*)tr.get();
+
             if (ImGui::InputInt("ID", &trPtr->motorIndex)) trPtr->edited = true;
             if (ImGui::InputFloat("Deg/Step", &trPtr->stepDeg, 0.01, 0.1, "%.4f")) trPtr->edited = true;
             if (ImGui::InputInt("Speed", &trPtr->p_speed)) trPtr->edited = true;
             if (ImGui::InputInt("Accel", &trPtr->p_accel)) trPtr->edited = true;
             if (ImGui::InputInt("Decel", &trPtr->p_decel)) trPtr->edited = true;
+            if (ImGui::Checkbox("Drive", &trPtr->doDrive)) trPtr->edited = true;
         }
 
         if (tr->getType() == TRACK_MOTOR)
@@ -811,7 +813,11 @@ void timelineViewer::mousePressed(ofMouseEventArgs & e)
         if (hoverParam)
         {
             uint64_t targTime = ofMap(e.x, seekLeft, seekLeft + seekWidth, view_begin, view_end);
-            hoverParam->addKeyPoint(targTime);
+            int idx = hoverParam->addKeyPoint(targTime);
+            selBlocks.clear();
+            selParentParam.clear();
+            selBlocks.push_back(hoverParam->pickBlocks(idx)[0]);
+            selParentParam.push_back(hoverParam);
         }
         doubleClTimer = 0;
     }

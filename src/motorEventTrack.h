@@ -36,12 +36,6 @@ public:
 		tm_event ev = getEventParameter(state, passed, duration, 0, -1, 2);
 		if (ev.label.length() > 0)
 		{
-			if (ev.label.substr(0, 4) == "rnd:")
-			{
-				float angle = ofToFloat(ev.label.substr(4));
-				ofxModbusMotorDriver::instance().roundNear(motorIndex,
-					angle / stepDeg, p_speed / stepDeg, p_accel / stepDeg, p_decel / stepDeg);
-			}
 			if (ev.label.substr(0, 4) == "spd:")
 			{
 				float spd = ofToFloat(ev.label.substr(4));
@@ -57,17 +51,26 @@ public:
 				float dec = ofToFloat(ev.label.substr(4));
 				p_decel = dec;
 			}
-			if (ev.label.substr(0, 4) == "abs:")
+			if (doDrive)
 			{
-				float angle = ofToFloat(ev.label.substr(4));
-				ofxModbusMotorDriver::instance().goAbs(motorIndex,
-					angle / stepDeg, p_speed / stepDeg, p_accel / stepDeg, p_decel / stepDeg);
-			}
-			if (ev.label.substr(0, 4) == "run:")
-			{
-				float speed = ofToFloat(ev.label.substr(4));
-				ofxModbusMotorDriver::instance().run(motorIndex,
-					speed / stepDeg, p_accel / stepDeg, p_decel / stepDeg);
+				if (ev.label.substr(0, 4) == "rnd:")
+				{
+					float angle = ofToFloat(ev.label.substr(4));
+					ofxModbusMotorDriver::instance().roundNear(motorIndex,
+						angle / stepDeg, p_speed / stepDeg, p_accel / stepDeg, p_decel / stepDeg);
+				}
+				if (ev.label.substr(0, 4) == "abs:")
+				{
+					float angle = ofToFloat(ev.label.substr(4));
+					ofxModbusMotorDriver::instance().goAbs(motorIndex,
+						angle / stepDeg, p_speed / stepDeg, p_accel / stepDeg, p_decel / stepDeg);
+				}
+				if (ev.label.substr(0, 4) == "run:")
+				{
+					float speed = ofToFloat(ev.label.substr(4));
+					ofxModbusMotorDriver::instance().run(motorIndex,
+						speed / stepDeg, p_accel / stepDeg, p_decel / stepDeg);
+				}
 			}
 		}
 	}
