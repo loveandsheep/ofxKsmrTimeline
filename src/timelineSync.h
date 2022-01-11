@@ -6,6 +6,8 @@ class timeline;
 
 class timelineSyncBase{
 public:
+    bool enable = true; //同期先に送信するかどうか
+
     void setup(ofPtr<timeline> masterPtr)
     {
         master = masterPtr;
@@ -79,7 +81,7 @@ public:
 
     virtual void play(bool byMaster = false)
     {
-        if (sendHost == "localhost" || sendHost == "127.0.0.1") return;
+        if (sendHost == "localhost" || sendHost == "127.0.0.1" || !enable) return;
         timelineSyncBase::play(byMaster);
         ofxOscMessage m;
         m.setAddress("/play");
@@ -89,7 +91,7 @@ public:
     
     virtual void setPause (bool b, bool byMaster = false)
     {
-        if (sendHost == "localhost" || sendHost == "127.0.0.1") return;
+        if (sendHost == "localhost" || sendHost == "127.0.0.1" || !enable) return;
         timelineSyncBase::setPause(b, byMaster);
         ofxOscMessage m;
         m.setAddress("/pause");
@@ -100,7 +102,7 @@ public:
 
     virtual void stop (bool byMaster = false)
     {
-        if (sendHost == "localhost" || sendHost == "127.0.0.1") return;
+        if (sendHost == "localhost" || sendHost == "127.0.0.1" || !enable) return;
         timelineSyncBase::stop(byMaster);
         ofxOscMessage m;
         m.setAddress("/stop");
@@ -110,7 +112,7 @@ public:
 
     virtual void setPosition(uint64_t millis, bool byMaster = false)
     {
-        if (sendHost == "localhost" || sendHost == "127.0.0.1") return;
+        if (sendHost == "localhost" || sendHost == "127.0.0.1" || !enable) return;
         timelineSyncBase::setPosition(millis, byMaster);
         ofxOscMessage m;
         m.setAddress("/seek");
@@ -121,7 +123,7 @@ public:
 
     virtual void setChapter(int index, bool byMaster = false)
     {
-        if (sendHost == "localhost" || sendHost == "127.0.0.1") return;
+        if (sendHost == "localhost" || sendHost == "127.0.0.1" || !enable) return;
         timelineSyncBase::setChapter(index, byMaster);
         ofxOscMessage m;
         m.setAddress("/chapter");
