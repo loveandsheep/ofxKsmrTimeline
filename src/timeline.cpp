@@ -598,7 +598,6 @@ void timeline::setChapter(string name)
     for (int i = 0;i < chapters.size();i++)
     {
         if (chapters[i]->name == name) setChapter(i);
-        cout << "set Chapter :" << name << endl;
     }
 }
 
