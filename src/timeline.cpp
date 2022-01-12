@@ -389,6 +389,94 @@ void timeline::load(string path)
     currentFileName = ofSplitString(ofSplitString(path, "/", true, true).back(), "\\", true, true).back();
 }
 
+void timeline::importChapter(string path)
+{
+    ofJson j, js = ofLoadJson(path);
+    ofJson j_tm = js["timeline"];
+
+    for (int ts = 0;ts < j_tm.size();ts++)
+    {
+        if (j_tm.type() == nlohmann::detail::value_t::array)  j = j_tm[ts];
+        createChapterFromJson(j);
+    }
+}
+
+void timeline::createChapterFromJson(ofJson j)
+{
+    string chapterName = "";
+    string suffix = "";
+    if (!j["chapterName"].empty()) chapterName = j["chapterName"].get<string>();
+
+    bool namePassed = false;
+    int nameCounter = 0;
+
+    while (!namePassed)
+    {
+        nameCounter++;
+        if (nameCounter > 1) suffix = "_" + ofToString(nameCounter);
+        namePassed = true;
+
+        for (int i = 0;i < getChapterSize();i++)
+        {
+            if (getChapter(i)->name == chapterName + suffix)
+            {
+                namePassed = false;
+            }
+        }
+    }
+
+    chapterName = chapterName + suffix;
+
+    createChapter(chapterName, j["duration"].get<int>());
+
+    setDuration(j["duration"].get<int>());
+    if (!j["isLoop"].empty()) setIsLoop(j["isLoop"].get<bool>());
+    if (!j["bgColor"].empty())
+    {
+        getCurrentChapter()->bgColor.r = j["bgColor"][0];
+        getCurrentChapter()->bgColor.g = j["bgColor"][1];
+        getCurrentChapter()->bgColor.b = j["bgColor"][2];
+    }
+
+
+    //トラックの追加
+    for (auto & jtr : j["tracks"])
+    {
+        //トラックの読み込んだプロパティはここで設定 
+        auto nt = addTrack(jtr["name"], trackType(jtr["type"].get<int>()), false);
+        nt->setJsonData(jtr);
+
+        //トラックのparamにキーポイントを追加
+        //paramsの数はtrackTypeによって保証されている前提
+        auto & params = nt->getParamsRef();
+        for (int i = 0;i < params.size(); i++)
+        {            
+            if (i < jtr["params"].size())
+            {
+                auto & j_pr = jtr["params"][i];
+                //特殊パラメータ型の処置
+                if (j_pr["type"].get<int>() == int(PTYPE_JSONSTREAM))
+                {
+                    jsonParam* jsonpr = (jsonParam*)params[i].get();
+                    jsonpr->parseJson(j_pr);
+                }
+                for (int j = 0;j < j_pr["keyPoints"].size();j++)
+                {
+                    params[i]->addKeyPoint(j_pr["keyPoints"][j]);
+                    //キーポイントの該当ブロックにパラメータを設定
+                    for (int o = 0;o < j_pr["blocks"].size();o++)
+                    {
+                        auto & j_br = j_pr["blocks"][o][j];
+                        auto & b = params[i]->getBlocks(o)[j];
+                        b->setFromJson(j_br);
+                    }
+                }
+            }
+            params[i]->refleshInherit();
+        }
+    }//for (auto & jtr : j["tracks"])
+}
+
 void timeline::setFromJson(ofJson j)
 {
     if (j.empty())
@@ -422,62 +510,15 @@ void timeline::setFromJson(ofJson j)
         }
         if (j_tm.type() == nlohmann::detail::value_t::array)  j = j_tm[ts];
 
-        string chapterName = "";
-        if (!j["chapterName"].empty()) chapterName = j["chapterName"].get<string>();
-        createChapter(chapterName, j["duration"].get<int>());
-
-        setDuration(j["duration"].get<int>());
-        if (!j["isLoop"].empty()) setIsLoop(j["isLoop"].get<bool>());
-        if (!j["bgColor"].empty())
-        {
-            getCurrentChapter()->bgColor.r = j["bgColor"][0];
-            getCurrentChapter()->bgColor.g = j["bgColor"][1];
-            getCurrentChapter()->bgColor.b = j["bgColor"][2];
-        }
-
-
-        //トラックの追加
-        for (auto & jtr : j["tracks"])
-        {
-            //トラックの読み込んだプロパティはここで設定 
-            auto nt = addTrack(jtr["name"], trackType(jtr["type"].get<int>()), false);
-            nt->setJsonData(jtr);
-
-            //トラックのparamにキーポイントを追加
-            //paramsの数はtrackTypeによって保証されている前提
-            auto & params = nt->getParamsRef();
-            for (int i = 0;i < params.size(); i++)
-            {            
-                if (i < jtr["params"].size())
-                {
-                    auto & j_pr = jtr["params"][i];
-                    //特殊パラメータ型の処置
-                    if (j_pr["type"].get<int>() == int(PTYPE_JSONSTREAM))
-                    {
-                        jsonParam* jsonpr = (jsonParam*)params[i].get();
-                        jsonpr->parseJson(j_pr);
-                    }
-                    for (int j = 0;j < j_pr["keyPoints"].size();j++)
-                    {
-                        params[i]->addKeyPoint(j_pr["keyPoints"][j]);
-                        //キーポイントの該当ブロックにパラメータを設定
-                        for (int o = 0;o < j_pr["blocks"].size();o++)
-                        {
-                            auto & j_br = j_pr["blocks"][o][j];
-                            auto & b = params[i]->getBlocks(o)[j];
-                            b->setFromJson(j_br);
-                        }
-                    }
-                }
-                params[i]->refleshInherit();
-            }
-        }//for (auto & jtr : j["tracks"])
+        createChapterFromJson(j);
 
     }// for (int ts = 0;ts < j_tm.size();ts++)
 
     sender.setup(sendAddr, sendPort);
     receiver.setup(recvPort);
 }
+
+
 
 void timeline::save(string path)
 {

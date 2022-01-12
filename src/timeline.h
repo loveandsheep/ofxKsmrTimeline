@@ -31,13 +31,14 @@ public:
     void clear(bool completely = false);
     void drawMinimum(int x, int y);
 
-
     string lastLog = "";
     int syncPort = 7124;
     void sendLog(string host, string message);
     void sendError(string host, string message);
 
     void receivedMessage(ofxOscMessage & m);
+    void importChapter(string path);
+    void createChapterFromJson(ofJson j);
     void setFromJson(ofJson data);
     ofJson getJsonData();
 
@@ -142,12 +143,22 @@ public:
     int getChapterSize(){return chapters.size();}
     int getCurrentChapterIndex(){return currentChapterIndex;}
     ofPtr<chapter> & getCurrentChapter(){return chapters[currentChapterIndex];}
+    ofPtr<chapter> & getChapter(int index){return chapters[index];}
     void createChapter(string name, uint64_t duration, bool setToCurrent = true);
     void setChapter(string name);
     void setChapter(int index);
     void removeChapter(string name);
     void removeChapter(int index);
     void clearChapter(bool completely = false);
+    void swapChapter(int a, int b)
+    {
+        if (a < 0) return;
+        if (b < 0) return;
+        if (a > getChapterSize() - 1) return;
+        if (b > getChapterSize() - 1) return;
+
+        swap(chapters[a], chapters[b]);
+    }
 
     bool edited = false;
 
