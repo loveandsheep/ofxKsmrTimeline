@@ -1116,7 +1116,7 @@ void timelineViewer::drawGui()
         }
     }
  
-    if (ImGui::Button("Save"))  
+    if (ImGui::Button("Save"))
     {
         if (tm->getCurrentFileName() == "")
         {

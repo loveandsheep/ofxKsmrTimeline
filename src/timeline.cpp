@@ -309,6 +309,7 @@ void timeline::play()
     setPause(false);
 
     ofNotifyEvent(ev_play, getTimelineEvArg());
+    ofLogNotice() << ofGetTimestampString("[%H:%M:%S]") << "Play at " << getCurrentChapter()->name;
 }
 
 void timeline::stop()
@@ -317,7 +318,7 @@ void timeline::stop()
     passed = 0;
 
     ofNotifyEvent(ev_stop, getTimelineEvArg());
-
+    ofLogNotice() << ofGetTimestampString("[%H:%M:%S]") << "stop at " << getCurrentChapter()->name;
 }
 
 void timeline::setPosition(float position)
@@ -344,6 +345,10 @@ void timeline::setPause(bool b)
     paused = b;
 
     ofNotifyEvent(ev_pause, getTimelineEvArg());
+    if (b)
+        ofLogNotice() << ofGetTimestampString("[%H:%M:%S]") << "Paused at " << getCurrentChapter()->name;
+    else
+        ofLogNotice() << ofGetTimestampString("[%H:%M:%S]") << "Play at " << getCurrentChapter()->name;
 }
 
 timelineEventArgs & timeline::getTimelineEvArg()
@@ -647,6 +652,8 @@ void timeline::setChapter(int index)
     if (index < 0 || chapters.size() <= index) return;
     currentChapterIndex = index;
     ofNotifyEvent(ev_chapter, getTimelineEvArg());
+
+    ofLogNotice() << ofGetTimestampString("[%H:%M:%S]") << "setChapter " << getCurrentChapter()->name;
 }
 
 void timeline::removeChapter(int index)
