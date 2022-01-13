@@ -716,6 +716,12 @@ void timelineViewer::keyPressed(ofKeyEventArgs & key){
         zoomOut();
     }
 
+    if ((key.keycode == 's' || key.keycode == 'S') && ofGetKeyPressed(OF_KEY_CONTROL))
+    {
+        tm->save(tm->getCurrentFileName());
+        tm->lastLog = "local:save timeline => " + tm->getCurrentFileName();
+    }
+
     if ((key.keycode == 67) && ofGetKeyPressed(OF_KEY_CONTROL))
     {
         if (selBlocks.size() > 0) 
