@@ -75,6 +75,7 @@ public:
     void draw();
 
     vector<string> json_piece;
+    int parseCounter = 0;
 
     //セッター
     void setDuration(uint64_t d){getCurrentChapter()->duration = d;}
