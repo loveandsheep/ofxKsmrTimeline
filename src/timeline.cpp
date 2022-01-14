@@ -140,6 +140,8 @@ void timeline::receivedMessage(ofxOscMessage & m)
     {
         json_piece.resize(m.getArgAsInt(2));
         json_piece[m.getArgAsInt(1)] = m.getArgAsString(0);
+        if (m.getArgAsInt(1) == 0) parseCounter = 0;
+        parseCounter++;
     }
 
     if (m.getAddress() == "/json/set/parse")
@@ -150,6 +152,7 @@ void timeline::receivedMessage(ofxOscMessage & m)
             d += jp;
         }
         bool parseSuccess = true;
+        
         try
         {
             setFromJson(ofJson::parse(d));
@@ -157,13 +160,19 @@ void timeline::receivedMessage(ofxOscMessage & m)
         catch(const std::exception & e)
         {
             sendLog(m.getRemoteHost(), "[sync] sync data error.");
+            stringstream ss;
+            ss << "[error] data Parsing failed. : " << parseCounter << "/" << json_piece.size();
+            lastLog = ss.str();
+            parseSuccess = false;
         }
         if (parseSuccess)
         {
             stringstream ss;
-            ss << "[sync] sync data success. " << json_piece.size() << " piece merged." << "\nHash : 0x" << hex << crc16(d.c_str(), d.length());
+            ss << "[sync] sync data success. " << parseCounter << "/" << json_piece.size() << " piece merged." << "\nHash : 0x" << hex << crc16(d.c_str(), d.length());
             sendLog(m.getRemoteHost(), ss.str());
         }
+
+        parseCounter = 0;
     }
 
     if (m.getAddress() == "/json/save")
