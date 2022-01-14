@@ -161,7 +161,7 @@ void timeline::receivedMessage(ofxOscMessage & m)
         if (parseSuccess)
         {
             stringstream ss;
-            ss << "[sync] sync data success\nHash : 0x" << hex << crc16(d.c_str(), d.length());
+            ss << "[sync] sync data success. " << json_piece.size() << " piece merged." << "\nHash : 0x" << hex << crc16(d.c_str(), d.length());
             sendLog(m.getRemoteHost(), ss.str());
         }
     }
