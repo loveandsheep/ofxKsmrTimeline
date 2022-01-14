@@ -13,7 +13,6 @@ void timeline::sendSyncJsonData(string host, int port)
     if (port == 0) port = getSendPort();
 
     ofxOscSender s_sync;
-    ofxOscBundle bundle;
     s_sync.setup(host, syncPort);
 
     ofJson syncJson = getJsonData();
@@ -28,18 +27,18 @@ void timeline::sendSyncJsonData(string host, int port)
         mes.setAddress("/json/set");
         int st = i * pieceSize;
         int ed = MIN(dat.length(), (i + 1) * pieceSize);
-        mes.addStringArg(dat.substr(st, ed - st));
-        mes.addIntArg(i);
-        mes.addIntArg(dat.length() / pieceSize + 1);
+        
+        mes.addStringArg(dat.substr(st, ed - st)); //JSONデータ
+        mes.addIntArg(i); //データインデックス
+        mes.addIntArg(dat.length() / pieceSize + 1); //総データ数
 
-        bundle.addMessage(mes);
+        s_sync.sendMessage(mes);
     }
 
     ofxOscMessage joiner;
     joiner.setAddress("/json/set/parse");
 
-    bundle.addMessage(joiner);
-    s_sync.sendBundle(bundle);
+    s_sync.sendMessage(joiner);
 }
 
 void timeline::drawMinimum(int x, int y)
