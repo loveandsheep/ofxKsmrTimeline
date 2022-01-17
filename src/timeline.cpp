@@ -486,6 +486,14 @@ void timeline::createChapterFromJson(ofJson j)
     }//for (auto & jtr : j["tracks"])
 }
 
+void timeline::duplicateChapter(int index)
+{
+    if (index < 0 || index > chapters.size()) return;
+    ofJson j = getChapter(index)->getJsonData();
+    j["chapterName"] = j["chapterName"].get<string>() + "_copy";
+    createChapterFromJson(j);
+}
+
 void timeline::setFromJson(ofJson j)
 {
     if (j.empty())
@@ -548,15 +556,7 @@ ofJson timeline::getJsonData()
 
     for (auto & c : chapters)
     {
-        ofJson chj;
-        chj["duration"] = c->duration;
-        chj["isLoop"] = c->isLoop;
-        chj["chapterName"] = c->name;
-        chj["bgColor"][0] = c->bgColor.r;
-        chj["bgColor"][1] = c->bgColor.g;
-        chj["bgColor"][2] = c->bgColor.b;
-        
-        for (auto & t : c->tracks) chj["tracks"].push_back(t->getJsonData());
+        ofJson chj = c->getJsonData();
         j_tm.push_back(chj);
     }
 

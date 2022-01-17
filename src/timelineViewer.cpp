@@ -1050,11 +1050,21 @@ void timelineViewer::drawGui()
     int delRequest = -1;
     int upperReq = -1;
     int downerReq = -1;
+    int copyReq = -1;
     for (int i = 0;i < tm->getChapterSize();i++)
     {
         ImGui::PushID(955 + i);
         bool isCurrent = tm->getCurrentChapterIndex() == i;
         auto & ch = tm->getChapter(i);
+        
+        if (ImGui::Button("X")) delRequest = i;
+        ImGui::SameLine();
+        if (ImGui::Button("UP")) upperReq = i;
+        ImGui::SameLine();
+        if (ImGui::Button("Dn")) downerReq = i;
+        ImGui::SameLine();
+        if (ImGui::Button("Copy")) copyReq = i;
+        ImGui::SameLine();
         ImGui::PushStyleColor(ImGuiCol_Button, ch->bgColor * (isCurrent ? 1 : 0.5));
         ImGui::PushStyleColor(ImGuiCol_Text, ofFloatColor(isCurrent ? 1 : 0.5));
         if (ImGui::Button(chapterNames[i].c_str()))
@@ -1063,12 +1073,7 @@ void timelineViewer::drawGui()
             zoomOut();
         }
         ImGui::PopStyleColor(2);
-        ImGui::SameLine();
-        if (ImGui::Button("X")) delRequest = i;
-        ImGui::SameLine();
-        if (ImGui::Button("UP")) upperReq = i;
-        ImGui::SameLine();
-        if (ImGui::Button("Dn")) downerReq = i;
+
         ImGui::PopID();
     }
 
@@ -1088,6 +1093,10 @@ void timelineViewer::drawGui()
         string chName = tm->getCurrentChapter()->name;
         tm->swapChapter(downerReq, downerReq + 1);
         tm->setChapter(chName);
+    }
+    if (copyReq > -1)
+    {
+        tm->duplicateChapter(copyReq);
     }
 
     if (ImGui::Button("[+] New Chapter")) tm->createChapter("", tm->getDuration());

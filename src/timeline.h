@@ -22,6 +22,18 @@ public:
     bool                        isLoop = false;
     vector<ofPtr<trackBase> >   tracks;
     ofFloatColor                bgColor = ofFloatColor(0.46, 0.51, 0.56);
+    ofJson getJsonData(){
+        ofJson chj;
+        chj["duration"] = duration;
+        chj["isLoop"] = isLoop;
+        chj["chapterName"] = name;
+        chj["bgColor"][0] = bgColor.r;
+        chj["bgColor"][1] = bgColor.g;
+        chj["bgColor"][2] = bgColor.b;
+        
+        for (auto & t : tracks) chj["tracks"].push_back(t->getJsonData());
+        return chj;
+    }
 };
 
 class timeline {
@@ -39,6 +51,7 @@ public:
     void receivedMessage(ofxOscMessage & m);
     void importChapter(string path);
     void createChapterFromJson(ofJson j);
+    void duplicateChapter(int index);
     void setFromJson(ofJson data);
     ofJson getJsonData();
 
