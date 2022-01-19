@@ -52,10 +52,10 @@ public:
             auto & motor = ofxModbusMotorDriver::instance();
             if (m.getAddress() == "/track/standby") motorStandby(passed);
             if (m.getAddress() == "/track/jog/fw") 
-                motor.run(motorIndex, 100 / stepDeg, 1000 / stepDeg, 1000 / stepDeg, 100);
+                motor.run(motorIndex, 50 / stepDeg, 100 / stepDeg, 100 / stepDeg, 100);
 
             if (m.getAddress() == "/track/jog/rv") 
-                motor.run(motorIndex, -100 / stepDeg, 1000 / stepDeg, 1000 / stepDeg, 100);
+                motor.run(motorIndex, -50 / stepDeg, 100 / stepDeg, 100 / stepDeg, 100);
 
             if (m.getAddress() == "/track/jog/stop") 
                 motor.run(motorIndex, 0, 1000, 1000, 100);
