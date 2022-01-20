@@ -133,6 +133,20 @@ public:
 
 };
 
+class timelineSyncVideo : public timelineSyncBase{
+public:
+    ofVideoPlayer video;
+    uint64_t offset = 0;
+    string chapter = "";
+
+    void setup(ofPtr<timeline> masterPtr, string chap = "");
+    virtual void play(bool byMaster = false);
+    virtual void setPause(bool b, bool byMaster = false);
+    virtual void stop(bool byMaster = false);
+    virtual void setPosition(uint64_t millis, bool byMaster = false);
+    virtual void setChapter(int index, bool byMaster = false);
+};
+
 class timelineSyncLocal : public timelineSyncBase{
 public:
     ofPtr<timeline> syncTimeline;

@@ -53,6 +53,14 @@ void timelineViewer::draw(ofRectangle area) {
 
     auto & trs = tm->getTracks();
 
+    ofSetColor(255);
+    stringstream ss;
+    int min = tm->getPassed() / 1000 / 60;
+    int sec = tm->getPassed() / 1000 - min * 60;
+    int msec = tm->getPassed() - int(tm->getPassed() / 1000) * 1000;
+    ss << min << ":" << sec << ":" << msec;
+    ofDrawBitmapStringHighlight(ss.str(), ofVec2f(area.x + 20, area.y + 20));
+    
     //trackBaseの描画
     peekHeight.reset();
     for (int i = 0;i < trs.size(); i++)
@@ -88,6 +96,7 @@ void timelineViewer::draw(ofRectangle area) {
 
     ofPopMatrix();
     ofPopStyle();
+
 }
 
 void timelineViewer::drawBrush(ofRectangle area)
