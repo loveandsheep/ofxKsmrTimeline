@@ -59,6 +59,18 @@ public:
 					ofxModbusMotorDriver::instance().roundNear(motorIndex,
 						angle / stepDeg, p_speed / stepDeg, p_accel / stepDeg, p_decel / stepDeg);
 				}
+				if (ev.label.substr(0, 5) == "rndf:")
+				{
+					float angle = ofToFloat(ev.label.substr(5));
+					ofxModbusMotorDriver::instance().roundFWD(motorIndex,
+						angle / stepDeg, p_speed / stepDeg, p_accel / stepDeg, p_decel / stepDeg);
+				}
+				if (ev.label.substr(0, 5) == "rndr:")
+				{
+					float angle = ofToFloat(ev.label.substr(5));
+					ofxModbusMotorDriver::instance().roundRVS(motorIndex,
+						angle / stepDeg, p_speed / stepDeg, p_accel / stepDeg, p_decel / stepDeg);
+				}
 				if (ev.label.substr(0, 4) == "abs:")
 				{
 					float angle = ofToFloat(ev.label.substr(4));
