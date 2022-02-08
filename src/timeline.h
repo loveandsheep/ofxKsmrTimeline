@@ -143,6 +143,7 @@ public:
     }
 
     string getCurrentFileName(){return currentFileName;}
+    string getCurrentPath(){return currentPath;}
     
     void setSenderAddr(string addr);
     void setSenderPort(int port);

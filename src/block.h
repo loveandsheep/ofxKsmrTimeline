@@ -79,6 +79,7 @@ public:
         j["easeOut"] = easeOutFlag;
         j["accel"] = accel;
         j["decel"] = decel;
+        j["marker"] = marker;
 
         return j;
     }
@@ -96,6 +97,7 @@ public:
         if (!j_br["label"].empty()) label = j_br["label"].get<string>();
         if (!j_br["accel"].empty()) accel = j_br["accel"].get<float>();
         if (!j_br["decel"].empty()) decel = j_br["decel"].get<float>();
+        if (!j_br["marker"].empty()) marker = j_br["marker"].get<float>();
     }
 
     complementType const & getComplement(){return cmplType;}
@@ -140,6 +142,9 @@ public:
 
     string eventName = "newEvent";
     string label = "";
+
+    //マーカー表示
+    float marker = 0;
 
     //台形駆動
     float accel = 0.25;

@@ -111,6 +111,8 @@ protected:
     ofPtr<block> hoverBlock;
     vector<ofPtr<block> > selBlocks;
     vector<ofPtr<param> > selParentParam;
+    ofPtr<block> lastSelBlock;
+    ofPtr<param> lastSelParentParam;
     ofPtr<block> copiedBlock;
     ofPtr<param> copiedParentParam;
     string mouseLock = "free";

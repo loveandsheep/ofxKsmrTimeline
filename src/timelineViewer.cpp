@@ -540,7 +540,7 @@ float timelineViewer::drawParam(ofPtr<param> pr, ofRectangle area, uint64_t begi
                 if (blockSelected)
                 {
                     ofSetColor(255);
-                    string kpS = "key: " + ofToString(kp[i]) + " ms";
+                    string kpS = "key: " + ofToString(kp[i] / 1000.0 ) + " s";
                     ofDrawBitmapStringHighlight(kpS, xPos + 5, area.height - 10);
                 }
             }
@@ -661,6 +661,19 @@ void timelineViewer::drawParam_event(ofPtr<param> pr, ofRectangle area, uint64_t
         if (view_begin <= kp[i] && kp[i] <= view_end)
         {
             float x = ofMap(kp[i], begin, end, seekLeft, seekLeft + seekWidth) - area.x + 5;
+            float xEnd = ofMap(kp[i] + bl[i]->marker * 1000, begin, end, seekLeft, seekLeft + seekWidth) - area.x + 5;
+
+            if (bl[i]->marker > 0)
+            {
+                ofSetHexColor(0xc74204);
+                ofPushStyle();
+                ofSetLineWidth(5);
+                ofNoFill();
+                ofDrawRectangle(x, 0, xEnd - x, area.height);
+                ofPopStyle();
+            }
+
+            ofSetColor(255);
             ofDrawBitmapStringHighlight(bl[i]->eventName, x, 20);
         }
     }
@@ -727,7 +740,7 @@ void timelineViewer::keyPressed(ofKeyEventArgs & key){
 
     if ((key.keycode == 's' || key.keycode == 'S') && ofGetKeyPressed(OF_KEY_CONTROL))
     {
-        tm->save(tm->getCurrentFileName());
+        tm->save(tm->getCurrentPath());
         tm->lastLog = "local:save timeline => " + tm->getCurrentFileName();
     }
 
@@ -772,6 +785,8 @@ void timelineViewer::keyPressed(ofKeyEventArgs & key){
 
             selBlocks.clear();
             selParentParam.clear();
+            lastSelBlock.reset();
+            lastSelParentParam.reset();
             selBlocks.push_back(dst[0]);
             selParentParam.push_back(hoverParam);
         }
@@ -790,6 +805,8 @@ void timelineViewer::resetSelectedItems()
     copiedParentParam.reset();
     selBlocks.clear();
     selParentParam.clear();
+    lastSelBlock.reset();
+    lastSelParentParam.reset();
 }
 
 void timelineViewer::keyReleased(ofKeyEventArgs & key){}
@@ -831,6 +848,8 @@ void timelineViewer::mousePressed(ofMouseEventArgs & e)
             int idx = hoverParam->addKeyPoint(targTime);
             selBlocks.clear();
             selParentParam.clear();
+            lastSelBlock.reset();
+            lastSelParentParam.reset();
             selBlocks.push_back(hoverParam->pickBlocks(idx)[0]);
             selParentParam.push_back(hoverParam);
         }
@@ -844,6 +863,8 @@ void timelineViewer::mousePressed(ofMouseEventArgs & e)
             {
                 selBlocks.clear();
                 selParentParam.clear();
+                lastSelBlock.reset();
+                lastSelParentParam.reset();
             }
             if (hoverBlock)
             {
@@ -855,6 +876,8 @@ void timelineViewer::mousePressed(ofMouseEventArgs & e)
                     selBlocks.push_back(hoverBlock);
                     selParentParam.push_back(hoverParam);
                 }
+                lastSelBlock = hoverBlock;
+                lastSelParentParam = hoverParam;
             }
             doubleClTimer = ofGetElapsedTimeMillis();
         }
@@ -901,14 +924,28 @@ void timelineViewer::mouseDragged(ofMouseEventArgs & e)
         //キーポイントの調整
         if (!handToolFlag && hoverParam)
         {
-            int count = 0;
-            for (auto & b : selBlocks)
+            if (selBlocks.size() > 0)
             {
-                snaped = selParentParam[count]->moveKeyPoint(b, targTime - prevTime, 
+                auto & head = lastSelBlock;//selBlocks[0];//スナップの親分
+                auto & headP = lastSelParentParam;//selParentParam[0];
+                //ド頭に従う
+                int lastKey = headP->getKeyPoints()[headP->getBlockIndexByBlock(head)];
+                snaped = headP->moveKeyPoint(head, targTime - prevTime, 
                     snapPoints, 
                     MAX(1,ofMap(5, 0, seekWidth, 0, view_end - view_begin))
                 );
-                count++;
+
+                int movement = snaped > 0 ? snaped - lastKey : targTime - prevTime;
+
+                for (int i = 0;i < selBlocks.size();i++)
+                {
+                    auto & pc = selParentParam[i];
+                    auto & bc = selBlocks[i];
+                    if (bc == lastSelBlock) continue;
+                    int current = pc->getKeyPoints()[pc->getBlockIndexByBlock(bc)];
+                    pc->moveKeyPoint(bc, movement, vector<uint64_t>(), 
+                    MAX(1,ofMap(5, 0, seekWidth, 0, view_end - view_begin)));
+                }
             }
         }
 
@@ -1146,7 +1183,7 @@ void timelineViewer::drawGui()
         }
         else
         {
-            tm->save(tm->getCurrentFileName());
+            tm->save(tm->getCurrentPath());
         }
     }
     ImGui::SameLine();
@@ -1267,7 +1304,7 @@ void timelineViewer::drawParameterGui(ofPtr<block> & b, ofPtr<param> & p)
     vector<ofPtr<block> > bs = p->pickBlocks(idx);
 
     // ======================================共通ヘッダー
-    guiFloat_keyPoint = p->getKeyPoints()[idx];
+    guiFloat_keyPoint = p->getKeyPoints()[idx] / 1000.0;
 
     string title = "";
     if (p->getType() == PTYPE_COLOR) title = "COLOR:\n ";
@@ -1290,9 +1327,9 @@ void timelineViewer::drawParameterGui(ofPtr<block> & b, ofPtr<param> & p)
         p->refleshInherit();
     }
 
-    if (ImGui::DragFloat("keyPoint", &guiFloat_keyPoint, 1))
+    if (ImGui::DragFloat("keyPoint", &guiFloat_keyPoint, 0.1, 0))
     {
-        p->setKeyPoint(b, guiFloat_keyPoint);
+        p->setKeyPoint(b, MAX(0, guiFloat_keyPoint * 1000));
     }
     if (idx == 0) ImGui::PopStyleColor();
 
@@ -1354,6 +1391,7 @@ void timelineViewer::drawParameterGui(ofPtr<block> & b, ofPtr<param> & p)
         {
             b->eventName = gui_textInput;
         }
+        ImGui::DragFloat("Marker", &b->marker, 0.1, 0, 1000000);
     }
 
     //============================================Floatパラメータ描画
