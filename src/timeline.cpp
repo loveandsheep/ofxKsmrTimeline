@@ -303,6 +303,7 @@ void timeline::sendOsc()
             m.setAddress("/" + tr->getName());
             trackType const & t = tr->getType();
             if (t == TRACK_FLOAT) m.addFloatArg(getParameter<float>(tr));
+            if (t == TRACK_MOTOR) m.addFloatArg(getParameter<float>(tr));
             if (t == TRACK_COLOR)
             {
                 ofFloatColor c = getParameter<ofFloatColor>(tr);

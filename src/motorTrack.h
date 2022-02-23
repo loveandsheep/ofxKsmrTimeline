@@ -33,7 +33,7 @@ public:
     void motorStandby(uint64_t passed)
     {
         if (spin) return;
-        
+         
         auto p = getParamsRef()[0];
         int  index = p->getBlockIndexByTime(passed);
         auto b = p->pickBlocksByTime(passed)[0];
