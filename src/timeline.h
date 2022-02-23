@@ -45,6 +45,7 @@ public:
 
     string lastLog = "";
     int syncPort = 7124;
+    bool syncEnable = false;
     void sendLog(string host, string message);
     void sendError(string host, string message);
 
