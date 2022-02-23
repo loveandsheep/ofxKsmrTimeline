@@ -129,10 +129,12 @@ void timeline::receivedMessage(ofxOscMessage & m)
     if (m.getAddress() == "/error")
     {
         lastLog = "err :" + m.getArgAsString(0);
+        lastLogRemoteHost = m.getRemoteHost();
     }
     if (m.getAddress() == "/log")
     {
         lastLog = "log :" + m.getArgAsString(0);
+        lastLogRemoteHost = m.getRemoteHost();
     }
 
     //JSONデータの読み出し

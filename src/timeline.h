@@ -44,6 +44,7 @@ public:
     void drawMinimum(int x, int y);
 
     string lastLog = "";
+    string lastLogRemoteHost = "";
     int syncPort = 7124;
     void sendLog(string host, string message);
     void sendError(string host, string message);
