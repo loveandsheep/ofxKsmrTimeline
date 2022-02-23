@@ -202,46 +202,81 @@ void timeline::receivedMessage(ofxOscMessage & m)
 
     if (m.getAddress() == "/play")
     {
-        play();
-        if (m.getArgAsString(0) != getCurrentChapter()->name) 
-            setChapter(m.getArgAsString(0));
-
-        sendLog(m.getRemoteHost(), "[sync] play.");
-    }
-    if (m.getAddress() == "/stop")
-    {
-        stop();
-        sendLog(m.getRemoteHost(), "[sync] stop.");
-    }
-    if (m.getAddress() == "/seek")
-    {
-        if (m.getArgAsString(1) != getCurrentChapter()->name) 
-            setChapter(m.getArgAsString(1));
-
-        setPositionByMillis(m.getArgAsInt64(0));
-        sendLog(m.getRemoteHost(), "[sync] seek to :" + ofToString(m.getArgAsInt64(0)));
-    }
-    if (m.getAddress() == "/pause")
-    {
-        bool b = m.getArgAsBool(0);
-        setPause(b);
-
-        if (m.getArgAsString(1) != getCurrentChapter()->name) 
-            setChapter(m.getArgAsString(1));
-
-        sendLog(m.getRemoteHost(), string("[sync] pause :") + (b ? "ON" : "OFF"));
-    }
-    if (m.getAddress() == "/chapter") 
-    {
-        int ci = m.getArgAsInt(0);
-        if (ci < chapters.size())
+        if (!syncEnable)
         {
-            setChapter(ci);
-            sendLog(m.getRemoteHost(), "[sync] chapter :" + chapters[ci]->name);
+            sendError(m.getRemoteHost(), "[sync] sync Disabled!");
         }
         else
         {
-            sendError(m.getRemoteHost(), "[sync] chapter size error");
+            play();
+            if (m.getArgAsString(0) != getCurrentChapter()->name) 
+                setChapter(m.getArgAsString(0));
+
+            sendLog(m.getRemoteHost(), "[sync] play.");
+        }
+    }
+    if (m.getAddress() == "/stop")
+    {
+        if (!syncEnable)
+        {
+            sendError(m.getRemoteHost(), "[sync] sync Disabled!");
+        }
+        else
+        {
+            stop();
+            sendLog(m.getRemoteHost(), "[sync] stop.");
+        }
+    }
+    if (m.getAddress() == "/seek")
+    {
+        if (!syncEnable)
+        {
+            sendError(m.getRemoteHost(), "[sync] sync Disabled!");
+        }
+        else
+        {
+            if (m.getArgAsString(1) != getCurrentChapter()->name) 
+                setChapter(m.getArgAsString(1));
+
+            setPositionByMillis(m.getArgAsInt64(0));
+            sendLog(m.getRemoteHost(), "[sync] seek to :" + ofToString(m.getArgAsInt64(0)));
+        }
+    }
+    if (m.getAddress() == "/pause")
+    {
+        if (!syncEnable)
+        {
+            sendError(m.getRemoteHost(), "[sync] sync Disabled!");
+        }
+        else
+        {
+            bool b = m.getArgAsBool(0);
+            setPause(b);
+
+            if (m.getArgAsString(1) != getCurrentChapter()->name) 
+                setChapter(m.getArgAsString(1));
+
+            sendLog(m.getRemoteHost(), string("[sync] pause :") + (b ? "ON" : "OFF"));
+        }
+    }
+    if (m.getAddress() == "/chapter") 
+    {
+        if (!syncEnable)
+        {
+            sendError(m.getRemoteHost(), "[sync] sync Disabled!");
+        }
+        else
+        {
+            int ci = m.getArgAsInt(0);
+            if (ci < chapters.size())
+            {
+                setChapter(ci);
+                sendLog(m.getRemoteHost(), "[sync] chapter :" + chapters[ci]->name);
+            }
+            else
+            {
+                sendError(m.getRemoteHost(), "[sync] chapter size error");
+            }
         }
     } 
 }
