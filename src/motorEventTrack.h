@@ -53,6 +53,11 @@ public:
 			}
 			if (doDrive)
 			{
+				if (ev.label.substr(0, 4) == "alm:")
+				{
+					ofxModbusMotorDriver::instance().setRemote(0, RIO_ALM_RST, true);
+					ofxModbusMotorDriver::instance().setRemote(0, RIO_ALM_RST, false);
+				}
 				if (ev.label.substr(0, 4) == "rnd:")
 				{
 					float angle = ofToFloat(ev.label.substr(4));
