@@ -67,26 +67,26 @@ public:
 				if (ev.label.substr(0, 5) == "rndf:")
 				{
 					float angle = ofToFloat(ev.label.substr(5));
-					ofxModbusMotorDriver::instance().roundFWD(motorIndex,
-						angle / stepDeg, p_speed / stepDeg, p_accel / stepDeg, p_decel / stepDeg);
+					// ofxModbusMotorDriver::instance().roundFWD(motorIndex,
+						// angle / stepDeg, p_speed / stepDeg, p_accel / stepDeg, p_decel / stepDeg);
 				}
 				if (ev.label.substr(0, 5) == "rndr:")
 				{
 					float angle = ofToFloat(ev.label.substr(5));
-					ofxModbusMotorDriver::instance().roundRVS(motorIndex,
-						angle / stepDeg, p_speed / stepDeg, p_accel / stepDeg, p_decel / stepDeg);
+					// ofxModbusMotorDriver::instance().roundRVS(motorIndex,
+					// 	angle / stepDeg, p_speed / stepDeg, p_accel / stepDeg, p_decel / stepDeg);
 				}
 				if (ev.label.substr(0, 4) == "abs:")
 				{
 					float angle = ofToFloat(ev.label.substr(4));
-					ofxModbusMotorDriver::instance().goAbs(motorIndex,
-						angle / stepDeg, p_speed / stepDeg, p_accel / stepDeg, p_decel / stepDeg);
+					// ofxModbusMotorDriver::instance().goAbs(motorIndex,
+					// 	angle / stepDeg, p_speed / stepDeg, p_accel / stepDeg, p_decel / stepDeg);
 				}
 				if (ev.label.substr(0, 4) == "run:")
 				{
 					float speed = ofToFloat(ev.label.substr(4));
-					ofxModbusMotorDriver::instance().run(motorIndex,
-						speed / stepDeg, p_accel / stepDeg, p_decel / stepDeg);
+					// ofxModbusMotorDriver::instance().run(motorIndex,
+					// 	speed / stepDeg, p_accel / stepDeg, p_decel / stepDeg);
 				}
 			}
 		}
