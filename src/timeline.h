@@ -34,6 +34,15 @@ public:
         for (auto & t : tracks) chj["tracks"].push_back(t->getJsonData());
         return chj;
     }
+
+    ofPtr<trackBase> getTrack(string name)
+    {
+        for (auto & t : tracks)
+        {
+            if (name == t->getName()) return t;
+        }
+    }
+
 };
 
 class timeline {
@@ -161,6 +170,7 @@ public:
     int getCurrentChapterIndex(){return currentChapterIndex;}
     ofPtr<chapter> & getCurrentChapter(){return chapters[currentChapterIndex];}
     ofPtr<chapter> & getChapter(int index){return chapters[index];}
+    ofPtr<chapter> & getChapter(string name);
     void createChapter(string name, uint64_t duration, bool setToCurrent = true);
     void setChapter(string name);
     void setChapter(int index);

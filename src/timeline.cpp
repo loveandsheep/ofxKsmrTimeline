@@ -732,6 +732,13 @@ vector<string> timeline::getChapterNames()
     return ret;
 }
 
+ofPtr<chapter> & timeline::getChapter(string name) {
+    for (auto & c : chapters)
+    {
+        if (c->name == name) return c;
+    }
+}
+
 void timeline::sendLog(string host, string message)
 {
     ofxOscSender sender;
